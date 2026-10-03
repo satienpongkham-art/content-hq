@@ -1889,10 +1889,11 @@ ${$("#pl-note").value.trim() ? "เจ้าของอยากเน้น: "
 สินค้าที่ใช้ไปใน 14 วัน หลีกเลี่ยง:\n${avoidSP}
 ตอบเป็น JSON:
 {"week_note":"ภาพรวมสัปดาห์ 1-2 ประโยค","events":[{"date":"YYYY-MM-DD","name":""}],"days":[{"date":"YYYY-MM-DD","tiktok":{"title":"","hook":"","format":""},"sp":[{"time":"11:00","product":"","pain":""},{"time":"17:00","product":"","pain":""},{"time":"19:30","product":"","pain":""}],"ic":"หัวข้อ IC ที่อ่านวันนี้","other":"งานอื่น (ไม่บังคับ)"}],"sources_note":""}
-ต้องมีครบ 7 วันตามลำดับวันที่`;
+ต้องมีครบ 7 วันตามลำดับวันที่ เขียนกระชับ: title ไม่เกิน 12 คำ, hook ไม่เกิน 15 คำ, product ไม่เกิน 6 คำ, pain ไม่เกิน 8 คำ, events ไม่เกิน 6 รายการ`;
     const out = $("#pl-out");
     try {
-      const r = await aiJSON(prompt, out, "ทีมวางแผนกำลังวางแผน 7 วัน", { search: true, maxTokens: 6000 });
+      let r = await aiJSON(prompt, out, "ทีมวางแผนกำลังวางแผน 7 วัน", { search: true, maxTokens: 10000 });
+      if (r && !Array.isArray(r.days)) { const inner = Object.values(r).find((v) => v && typeof v === "object" && Array.isArray(v.days)); if (inner) r = Object.assign(inner, { _sources: r._sources }); else { const arr = Object.values(r).find((v) => Array.isArray(v) && v.length >= 5 && v[0] && v[0].date); if (arr) r.days = arr; } }
       if (!r || !Array.isArray(r.days) || !r.days.length) throw { message: "แผนไม่ครบ ลองใหม่อีกครั้ง" };
       r.days = dates.map((d, i) => Object.assign({}, r.days.find((x) => x.date === d) || r.days[i] || {}, { date: d }));
       r.createdAt = Date.now(); plans[wk] = r;

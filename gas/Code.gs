@@ -436,13 +436,12 @@ function apiAi_(req) {
     tools.push({ name: 'respond', description: 'ส่งคำตอบสุดท้าย เป็นข้อมูลตามรูปแบบ JSON ที่กำหนดในคำสั่ง ใส่ทุกฟิลด์ที่กำหนดไว้ที่ระดับบนสุดของ input', input_schema: { type: 'object', additionalProperties: true } });
     prompt += req.search
       ? '\n\nค้นเว็บเท่าที่จำเป็น (ไม่เกิน 3 ครั้ง) เพื่อยืนยันข้อมูลล่าสุด แล้วส่งคำตอบสุดท้ายด้วยเครื่องมือ respond เท่านั้น'
-      : '\n\nส่งคำตอบด้วยเครื่องมือ respond';
+      : '\n\nต้องส่งคำตอบด้วยเครื่องมือ respond เท่านั้น ห้ามตอบเป็นข้อความ';
   }
-  const body = { model: model, max_tokens: Math.min(Number(req.maxTokens) || 4000, 8000), messages: [{ role: 'user', content: prompt }] };
+  const body = { model: model, max_tokens: Math.min(Number(req.maxTokens) || 4000, 12000), messages: [{ role: 'user', content: prompt }] };
   if (tools.length) body.tools = tools;
-  if (req.json && !req.search) body.tool_choice = { type: 'tool', name: 'respond' };
   const sources = [], seen = {};
-  let out = null, text = '';
+  let out = null, text = '', lastStop = '';
   for (let turn = 0; turn < 4; turn++) {
     const res = UrlFetchApp.fetch('https://api.anthropic.com/v1/messages', {
       method: 'post', contentType: 'application/json', muteHttpExceptions: true,
@@ -458,15 +457,15 @@ function apiAi_(req) {
       return { ok: false, error: 'Claude API ' + code + ': ' + msg.slice(0, 200) };
     }
     if (r.usage) addUsage_(model, r.usage);
+    lastStop = r.stop_reason || '';
     (r.content || []).forEach((b) => {
       if (b.type === 'tool_use' && b.name === 'respond') out = b.input;
       if (b.type === 'text') text += b.text;
       if (b.type === 'web_search_tool_result' && Array.isArray(b.content)) b.content.forEach((x) => { if (x.url && !seen[x.url] && sources.length < 8) { seen[x.url] = 1; sources.push({ title: x.title || x.url, url: x.url }); } });
     });
     if (r.stop_reason === 'pause_turn') { body.messages = [body.messages[0], { role: 'assistant', content: r.content }]; continue; }
-    if (req.json && !out && turn === 0 && req.search && r.stop_reason !== 'max_tokens') { // ค้นเสร็จแต่ยังไม่ส่ง respond → บังคับส่ง
+    if (req.json && !out && turn === 0 && r.stop_reason === 'end_turn' && !/\{[\s\S]*\}/.test(text)) { // ค้นเสร็จแต่ยังไม่ส่ง respond → บังคับส่ง
       body.messages = [body.messages[0], { role: 'assistant', content: r.content }, { role: 'user', content: 'ส่งคำตอบสุดท้ายด้วยเครื่องมือ respond ตอนนี้เลย' }];
-      body.tool_choice = { type: 'tool', name: 'respond' };
       continue;
     }
     break;
@@ -474,7 +473,8 @@ function apiAi_(req) {
   if (out && Object.keys(out).length === 1 && typeof out[Object.keys(out)[0]] === 'string') { // บางครั้งห่อ JSON เป็นข้อความ
     try { const inner = JSON.parse(out[Object.keys(out)[0]]); if (inner && typeof inner === 'object') out = inner; } catch (e) {}
   }
-  return { ok: true, text: out ? JSON.stringify(out) : text, model: model, sources: sources, cost: usageMonth_() };
+  if (!out && !text.trim()) return { ok: false, error: lastStop === 'max_tokens' ? 'คำตอบยาวเกินกำหนด ลองใหม่อีกครั้ง' : 'AI ไม่ได้ส่งคำตอบ ลองใหม่อีกครั้ง' };
+  return { ok: true, text: out ? JSON.stringify(out) : text, model: model, sources: sources, stop: lastStop, cost: usageMonth_() };
 }
 
 /* ---------- LINE สรุปเช้า 08:00 ---------- */
