@@ -431,7 +431,7 @@ function apiAi_(req) {
   if (!prompt) return { ok: false, error: 'ไม่มีคำสั่ง' };
   const model = claudeModel_(req.tier);
   const tools = [];
-  if (req.search) tools.push({ type: 'web_search_20250305', name: 'web_search', max_uses: 3, user_location: { type: 'approximate', country: 'TH', timezone: 'Asia/Bangkok' } });
+  if (req.search) tools.push({ type: req._wsv || 'web_search_20260209', name: 'web_search', max_uses: 3 });
   if (req.json) {
     tools.push({ name: 'respond', description: 'ส่งคำตอบสุดท้าย เป็นข้อมูลตามรูปแบบ JSON ที่กำหนดในคำสั่ง ใส่ทุกฟิลด์ที่กำหนดไว้ที่ระดับบนสุดของ input', input_schema: { type: 'object', additionalProperties: true } });
     prompt += req.search
@@ -451,8 +451,10 @@ function apiAi_(req) {
     if (code !== 200) {
       if (code === 404) CacheService.getScriptCache().removeAll(['claude_model_haiku', 'claude_model_sonnet']);
       const msg = (r.error && r.error.message) || '';
-      if (req.search && /web_search|web search/i.test(msg)) { // ถ้าองค์กรยังไม่เปิดค้นเว็บ ให้ลองใหม่แบบไม่ค้น
-        return apiAi_(Object.assign({}, req, { search: false, prompt: req.prompt + '\n(ค้นเว็บไม่ได้ในครั้งนี้ ให้ระบุใน sources_note ว่าต้องเช็กข้อมูลอะไร)' }));
+      if (req.search && /web_search|web search|tools\./i.test(msg)) {
+        if (!req._wsv) return apiAi_(Object.assign({}, req, { _wsv: 'web_search_20250305' })); // ลองเวอร์ชันเครื่องมือเก่า
+        const r2 = apiAi_(Object.assign({}, req, { search: false, prompt: req.prompt + '\n(ค้นเว็บไม่ได้ในครั้งนี้ ให้ระบุใน sources_note ว่าต้องเช็กข้อมูลอะไร)' }));
+        r2.searchError = msg.slice(0, 300); return r2;
       }
       return { ok: false, error: 'Claude API ' + code + ': ' + msg.slice(0, 200) };
     }
@@ -470,6 +472,7 @@ function apiAi_(req) {
     }
     break;
   }
+  if (out && Object.keys(out).length === 1 && out[Object.keys(out)[0]] && typeof out[Object.keys(out)[0]] === 'object' && !Array.isArray(out[Object.keys(out)[0]])) out = out[Object.keys(out)[0]]; // ห่อไว้ใน {result:{...}}
   if (out && Object.keys(out).length === 1 && typeof out[Object.keys(out)[0]] === 'string') { // บางครั้งห่อ JSON เป็นข้อความ
     try { const inner = JSON.parse(out[Object.keys(out)[0]]); if (inner && typeof inner === 'object') out = inner; } catch (e) {}
   }
