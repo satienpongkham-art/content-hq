@@ -64,6 +64,7 @@
       document.body.appendChild(b);
     }
     if (j && j.ai === false) setTimeout(() => { const bn = document.getElementById("banner"); if (bn) { bn.textContent = "ยังไม่ได้ตั้งค่า ANTHROPIC_KEY ใน Apps Script ปุ่มให้ AI เขียนจะยังใช้ไม่ได้ (บันทึกงาน/FHC/Lead ใช้ได้ปกติ)"; bn.hidden = false; } }, 800);
+    if (j) emitCost(j.cost);
     readyResolve();
   }
   function lock() { pin = ""; store.del(localStorage, KEY); store.del(sessionStorage, KEY); }
@@ -131,13 +132,17 @@
   setInterval(() => { if (!document.hidden && pin) refresh(); }, 120000);
 
   // ---------- sample (AI) ----------
+  const emitCost = (c) => { if (c) window.dispatchEvent(new CustomEvent("hq-cost", { detail: c })); };
   async function sample(prompt, opts) {
-    const j = await call("ai", { prompt: String(prompt), maxTokens: (opts && opts.maxTokens) || 4000 });
-    if (opts && opts.onText) { try { opts.onText({ text: j.text }); } catch (e) {} }
-    return { text: j.text, model: j.model };
+    const o = opts || {};
+    const j = await call("ai", { prompt: String(prompt), maxTokens: o.maxTokens || 4000, json: !!o.json, search: !!o.search, tier: o.tier || "default" });
+    emitCost(j.cost);
+    if (o.onText) { try { o.onText({ text: j.text }); } catch (e) {} }
+    return { text: j.text, model: j.model, sources: j.sources || [] };
   }
   const user = { id: async () => "me", name: async () => "Satienpong" };
 
+  window.HQ_GITHUB = true;
   window.claude = {
     use: async (cap) => { await ready; return { sample, db, user, mcp }[cap] || null; },
   };

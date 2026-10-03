@@ -338,6 +338,42 @@ select option { background: var(--bg1); color: var(--fg); }
 .ld-item { grid-template-columns: 120px 96px 1fr auto; }
 @media (max-width: 600px) { .ld-item { grid-template-columns: 1fr; } }
 
+/* ---- v3: cost badge, plan, IC quiz, lead CRM ---- */
+.brand .cost { margin-left: 4px; font-family: var(--font-data); }
+@media (max-width: 640px) { .brand .cost { font-size: 11px; padding: 1px 8px; } }
+.tabs { overflow-x: auto; scrollbar-width: none; }
+.tabs::-webkit-scrollbar { display: none; }
+.tab { flex: none; }
+.srcs { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+.srcs a { font-size: 12px; color: var(--accent); background: rgba(143,163,255,.1); border-radius: 99px; padding: 1px 10px; text-decoration: none; max-width: 260px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pl-events { display: flex; flex-wrap: wrap; gap: 6px; margin: 4px 0 14px; }
+.pl-days { display: grid; gap: 12px; grid-template-columns: repeat(auto-fill, minmax(min(300px, 100%), 1fr)); }
+.pl-day { border: 1px solid var(--stroke); border-radius: var(--r-sm); padding: 12px 14px; background: var(--glass-in); display: grid; gap: 6px; align-content: start; }
+.pl-day.is-today { border-color: var(--mint); box-shadow: 0 0 0 1px var(--mint) inset; }
+.pl-day header { display: flex; flex-wrap: wrap; gap: 8px; align-items: baseline; }
+.pl-day header b { font-family: var(--font-display); }
+.pl-day p { margin: 0; font-size: 14px; }
+.pl-sp { list-style: none; margin: 0; padding: 0; display: grid; gap: 3px; font-size: 14px; }
+.pl-sp .t { font-family: var(--font-data); color: var(--mint); margin-right: 4px; }
+.ic-q { border: 1px solid var(--stroke); border-radius: var(--r-sm); padding: 12px 14px; margin: 0 0 12px; display: grid; gap: 6px; }
+.ic-q legend { padding: 0 6px; font-weight: 500; }
+.ic-q.ok { border-color: var(--good); } .ic-q.bad { border-color: var(--bad); }
+.ic-c { display: flex; gap: 8px; align-items: flex-start; padding: 6px 8px; border-radius: 8px; cursor: pointer; }
+.ic-c:hover { background: var(--glass-hi); }
+.ic-c input { margin-top: 6px; accent-color: var(--accent); }
+.ic-c.right { background: var(--good-soft); color: var(--good); }
+.ic-score { font-size: 18px; margin: 4px 0 10px; } .ic-score b { font-size: 28px; color: var(--accent); }
+.ic-w { padding: 12px 18px; border-bottom: 1px solid var(--stroke); display: grid; gap: 4px; }
+.ic-w p { margin: 0; }
+.ld-crm { display: grid; grid-template-columns: 110px 150px 1fr; gap: 6px; margin-top: 8px; }
+.ld-crm select, .ld-crm input { font: inherit; font-size: 13px; color: var(--fg); background: var(--glass-in); border: 1px solid var(--stroke); border-radius: 8px; padding: 5px 8px; min-width: 0; color-scheme: dark; }
+@media (max-width: 600px) { .ld-crm { grid-template-columns: 1fr 1fr; } .ld-crm [data-ldnote] { grid-column: 1 / -1; } }
+.ld-head { flex-wrap: wrap; gap: 8px; }
+#ld-filter { flex-wrap: wrap; max-width: 100%; }
+#ld-filter button { white-space: nowrap; }
+.ld-item .t { min-width: 0; overflow-wrap: anywhere; }
+#ld-filter { border-radius: 18px; }
+
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
@@ -352,12 +388,15 @@ select option { background: var(--bg1); color: var(--fg); }
     <div class="brand">
       <div class="mark">HQ</div>
       <div><h1>Content HQ การเงิน</h1><p id="today-label"></p></div>
+      <span class="pill mute plain cost" id="ai-cost" hidden title="ค่าใช้จ่าย AI เดือนนี้ (ประมาณ)"></span>
     </div>
     <nav class="tabs" role="tablist" aria-label="เมนูหลัก">
       <button class="tab" role="tab" id="tab-home" aria-controls="p-home" aria-selected="true">ภาพรวม</button>
       <button class="tab" role="tab" id="tab-today" aria-controls="p-today" aria-selected="false">งานวันนี้</button>
+      <button class="tab" role="tab" id="tab-plan" aria-controls="p-plan" aria-selected="false">แผน 7 วัน</button>
       <button class="tab" role="tab" id="tab-fhc" aria-controls="p-fhc" aria-selected="false">FHC ลูกค้า</button>
       <button class="tab" role="tab" id="tab-leads" aria-controls="p-leads" aria-selected="false">Lead ลูกค้า</button>
+      <button class="tab" role="tab" id="tab-ic" aria-controls="p-ic" aria-selected="false">ติว IC</button>
       <button class="tab" role="tab" id="tab-lib" aria-controls="p-lib" aria-selected="false">คลัง</button>
     </nav>
   </div>
@@ -466,6 +505,24 @@ select option { background: var(--bg1); color: var(--fg); }
     </div>
   </main>
 
+  <!-- ================= PLAN ================= -->
+  <main id="p-plan" role="tabpanel" aria-labelledby="tab-plan" hidden class="fade-in">
+    <div class="panel-head">
+      <div><p class="eyebrow">ทีมวางแผนรายสัปดาห์</p><h2>แผนคอนเทนต์ 7 วัน</h2></div>
+      <div class="row"><button class="btn-ghost" id="pl-ics" disabled>ลงปฏิทิน (.ics)</button><button class="btn" id="pl-gen">ให้ AI วางแผน</button></div>
+    </div>
+    <div class="glass tile" style="margin-bottom:18px">
+      <div class="ctl-row">
+        <label class="ctl" for="pl-week"><span>สัปดาห์ที่เริ่มวันจันทร์</span><input type="date" id="pl-week"></label>
+        <label class="ctl" for="pl-shoot"><span>เวลาถ่าย/ตัดต่อ (วันก่อนหน้า)</span><input type="time" id="pl-shoot" value="20:30"></label>
+        <label class="ctl" for="pl-post"><span>เวลาโพสต์ TikTok</span><input type="time" id="pl-post" value="18:00"></label>
+        <label class="ctl" for="pl-note"><span>อยากเน้นอะไรสัปดาห์นี้ (ไม่บังคับ)</span><input id="pl-note" placeholder="เช่น ใกล้สิ้นปี เน้นลดหย่อนภาษี"></label>
+      </div>
+      <p class="note" style="margin-top:10px">AI ค้นข่าว วันสำคัญ และแคมเปญ Shopee ของสัปดาห์นั้นให้ หัวข้อในแผนจะขึ้นในหน้างานวันนี้ให้อัตโนมัติ ไฟล์ .ics เปิดในมือถือหรือนำเข้า Google Calendar ได้ (มีแจ้งเตือนก่อน 10 นาที)</p>
+    </div>
+    <div id="pl-out" class="out empty">ยังไม่มีแผนของสัปดาห์นี้ กด “ให้ AI วางแผน”</div>
+  </main>
+
   <!-- ================= FHC ================= -->
   <main id="p-fhc" role="tabpanel" aria-labelledby="tab-fhc" hidden class="fade-in">
     <div class="panel-head">
@@ -496,10 +553,32 @@ select option { background: var(--bg1); color: var(--fg); }
         <section class="glass tile t-stats"><p class="eyebrow">จุดอ่อนที่เจอบ่อย</p><div id="ld-weak" class="ld-bars"></div></section>
       </div>
       <section class="glass list" style="margin-top:16px">
-        <div class="ld-head"><p class="eyebrow">ล่าสุด</p><div class="fhc-modes" role="group" aria-label="กรอง Lead" style="margin:0" id="ld-filter"><button type="button" data-f="all" aria-pressed="true">ทั้งหมด</button><button type="button" data-f="Hot" aria-pressed="false">Hot</button><button type="button" data-f="Warm" aria-pressed="false">Warm</button><button type="button" data-f="Cold" aria-pressed="false">Cold</button></div></div>
+        <div class="ld-head"><p class="eyebrow">ล่าสุด</p><div class="fhc-modes" role="group" aria-label="กรอง Lead" style="margin:0" id="ld-filter"><button type="button" data-f="all" aria-pressed="true">ทั้งหมด</button><button type="button" data-f="Hot" aria-pressed="false">Hot</button><button type="button" data-f="Warm" aria-pressed="false">Warm</button><button type="button" data-f="Cold" aria-pressed="false">Cold</button><button type="button" data-f="follow" aria-pressed="false">ต้องติดตาม</button></div></div>
         <div id="ld-list"></div>
       </section>
     </div>
+  </main>
+
+  <!-- ================= IC ================= -->
+  <main id="p-ic" role="tabpanel" aria-labelledby="tab-ic" hidden class="fade-in">
+    <div class="panel-head">
+      <div><p class="eyebrow">ทีม IC License</p><h2>ข้อสอบจำลอง IC</h2></div>
+      <p class="note" id="ic-stat"></p>
+    </div>
+    <div class="glass tile" style="margin-bottom:18px">
+      <div class="ctl-row">
+        <label class="ctl" for="ic-topic"><span>หัวข้อ</span><select id="ic-topic"></select></label>
+        <label class="ctl" for="ic-custom"><span>หรือพิมพ์หัวข้อเอง</span><input id="ic-custom" placeholder="เช่น การคำนวณ YTM"></label>
+        <label class="ctl" for="ic-n"><span>จำนวนข้อ</span><select id="ic-n"><option>5</option><option selected>10</option><option>15</option></select></label>
+        <button class="btn" id="ic-gen">ออกข้อสอบ</button>
+      </div>
+      <p class="note" style="margin-top:10px">ข้อสอบจำลองโดย AI เพื่อฝึกทำ ตัวเลขและกฎเกณฑ์ให้ตรวจกับหนังสือเตรียมสอบหรือประกาศล่าสุดอีกครั้ง ข้อที่ตอบผิดจะเก็บไว้ทบทวน และแจ้งใน LINE ตอนเช้า</p>
+    </div>
+    <div id="ic-out" class="out empty">เลือกหัวข้อแล้วกด “ออกข้อสอบ”</div>
+    <section class="glass list" style="margin-top:18px">
+      <div class="ld-head"><p class="eyebrow">ข้อที่เคยตอบผิด</p><button class="mini" id="ic-redo" hidden>ออกข้อสอบใหม่จากเรื่องที่ผิด</button></div>
+      <div id="ic-wrong"><p class="empty-row">ยังไม่มี</p></div>
+    </section>
   </main>
 
   <!-- ================= LIBRARY ================= -->
@@ -581,6 +660,7 @@ select option { background: var(--bg1); color: var(--fg); }
       document.body.appendChild(b);
     }
     if (j && j.ai === false) setTimeout(() => { const bn = document.getElementById("banner"); if (bn) { bn.textContent = "ยังไม่ได้ตั้งค่า ANTHROPIC_KEY ใน Apps Script ปุ่มให้ AI เขียนจะยังใช้ไม่ได้ (บันทึกงาน/FHC/Lead ใช้ได้ปกติ)"; bn.hidden = false; } }, 800);
+    if (j) emitCost(j.cost);
     readyResolve();
   }
   function lock() { pin = ""; store.del(localStorage, KEY); store.del(sessionStorage, KEY); }
@@ -648,13 +728,17 @@ select option { background: var(--bg1); color: var(--fg); }
   setInterval(() => { if (!document.hidden && pin) refresh(); }, 120000);
 
   // ---------- sample (AI) ----------
+  const emitCost = (c) => { if (c) window.dispatchEvent(new CustomEvent("hq-cost", { detail: c })); };
   async function sample(prompt, opts) {
-    const j = await call("ai", { prompt: String(prompt), maxTokens: (opts && opts.maxTokens) || 4000 });
-    if (opts && opts.onText) { try { opts.onText({ text: j.text }); } catch (e) {} }
-    return { text: j.text, model: j.model };
+    const o = opts || {};
+    const j = await call("ai", { prompt: String(prompt), maxTokens: o.maxTokens || 4000, json: !!o.json, search: !!o.search, tier: o.tier || "default" });
+    emitCost(j.cost);
+    if (o.onText) { try { o.onText({ text: j.text }); } catch (e) {} }
+    return { text: j.text, model: j.model, sources: j.sources || [] };
   }
   const user = { id: async () => "me", name: async () => "Satienpong" };
 
+  window.HQ_GITHUB = true;
   window.claude = {
     use: async (cap) => { await ready; return { sample, db, user, mcp }[cap] || null; },
   };
@@ -1157,7 +1241,9 @@ select option { background: var(--bg1); color: var(--fg); }
     { id: "s3", time: "19:30", min: 1170, who: "Prime time ช้อปจริง", cat: "แม่และเด็ก/สัตว์เลี้ยง" },
   ];
   const CATS = ["ของใช้ในบ้าน/ครัว", "แกดเจ็ต/ไอที", "แม่และเด็ก/สัตว์เลี้ยง"];
-  const RULES = `กฎ: (1) ให้ความรู้การเงิน ไม่ชี้นำ ห้ามบอกให้ซื้อ/ขาย/ถือหุ้นหรือกองทุนใด ห้ามราคาเป้าหมาย ห้ามการันตีผลตอบแทน พูดถึงหุ้นได้แค่ "บริษัทนี้ทำธุรกิจอะไร หาเงินจากไหน" (2) Unit Linked เป็นความรู้ทั่วไปเท่านั้น ต้องบอกว่ามีความเสี่ยง (3) Shopee: เขียนในมุมผู้แนะนำ ห้ามแต่งรีวิวว่าใช้แล้ว ห้ามแต่งคำพูดลูกค้า ห้ามอ้างสรรพคุณเกินข้อมูลที่ให้ ใส่การเปิดเผยว่าเป็นลิงก์ Affiliate (4) ถ้าใช้ตัวเลข/ข้อเท็จจริงที่อาจเปลี่ยนตามเวลา ให้ระบุใน sources_note ว่าต้องเช็กอะไร เพราะคุณค้นเว็บไม่ได้ในหน้านี้`;
+  const RULES = `กฎ: (1) ให้ความรู้การเงิน ไม่ชี้นำ ห้ามบอกให้ซื้อ/ขาย/ถือหุ้นหรือกองทุนใด ห้ามราคาเป้าหมาย ห้ามการันตีผลตอบแทน พูดถึงหุ้นได้แค่ "บริษัทนี้ทำธุรกิจอะไร หาเงินจากไหน" (2) Unit Linked เป็นความรู้ทั่วไปเท่านั้น ต้องบอกว่ามีความเสี่ยง (3) Shopee: เขียนในมุมผู้แนะนำ ห้ามแต่งรีวิวว่าใช้แล้ว ห้ามแต่งคำพูดลูกค้า ห้ามอ้างสรรพคุณเกินข้อมูลที่ให้ ใส่การเปิดเผยว่าเป็นลิงก์ Affiliate (4) ถ้าใช้ตัวเลข/ข้อเท็จจริงที่อาจเปลี่ยนตามเวลา ให้ระบุใน sources_note ว่าต้องเช็กอะไร`;
+  const GH = !!window.HQ_GITHUB; // เวอร์ชัน GitHub: ค้นเว็บได้ + โหมดประหยัด
+  const SEARCH_NOTE = (on) => on ? "\nคุณค้นเว็บได้ ใช้ยืนยันข่าว/ตัวเลข/ข้อเท็จจริงล่าสุด ใส่ชื่อแหล่งข้อมูลใน sources_note" : "\nคุณค้นเว็บไม่ได้ในครั้งนี้ ข้อเท็จจริงที่อาจเปลี่ยนตามเวลาให้ระบุใน sources_note ว่าต้องเช็กอะไร";
   const TT_SCHEMA = `{"title":"","audience":"","format":"","length_sec":60,"hooks":["hook หลัก","สำรอง1","สำรอง2"],"hook_onscreen":"ข้อความบนจอ 0-3 วิ","scenes":[{"visual":"ภาพ/ท่าทาง","line":"บทพูด","onscreen":"ข้อความบนจอ"}],"punchline":"","cta":"","caption":"ไม่เกิน 150 ตัวอักษร","hashtags":["#..."],"music":"","disclaimer":"","sources_note":"สิ่งที่ต้องเช็กข้อเท็จจริง","log":{"topic":"","angle":"","hook":""}}`;
   const SP_SCHEMA = (suggested) => `{"product":"ชื่อสินค้า","suggested":${suggested},"search_keywords":["..."],"price_range":"","shop_criteria":"","pain_point":"","formula":"","versions":{"A":"","B":"","C":""},"first_comment":"ข้อความคอมเมนต์แรกที่มีลิงก์","image_idea":"","group_types":["ประเภทกลุ่ม FB ที่เหมาะ"],"group_search":["คีย์เวิร์ดค้นหากลุ่ม"],"log":{"product":"","pain":""}}`;
   const TT_REFINE = ["ตลกขึ้น", "สั้นลงเหลือ 45 วิ", "Hook แรงขึ้น", "เปลี่ยนมุมเล่าใหม่", "ภาษาวัยรุ่นขึ้น"];
@@ -1198,13 +1284,15 @@ select option { background: var(--bg1); color: var(--fg); }
   }
 
   // ---------------- tabs ----------------
-  const tabs = ["home", "today", "fhc", "leads", "lib"];
+  const tabs = ["home", "today", "plan", "fhc", "leads", "ic", "lib"];
   function selectTab(name) {
     tabs.forEach((t) => { $("#tab-" + t).setAttribute("aria-selected", t === name ? "true" : "false"); $("#p-" + t).hidden = t !== name; });
     try { localStorage.setItem("hq-tab", name); } catch (e) {}
     if (name === "lib") renderLib();
     if (name === "leads") startLeads();
     if (name === "home") renderHome();
+    if (name === "plan") loadPlan();
+    if (name === "ic") renderIC();
     window.scrollTo({ top: 0 });
   }
   tabs.forEach((t) => $("#tab-" + t).addEventListener("click", () => selectTab(t)));
@@ -1219,21 +1307,50 @@ select option { background: var(--bg1); color: var(--fg); }
     if (c === "cancelled") return "ยกเลิกแล้ว";
     return "AI ตอบไม่สำเร็จ (" + ((e && (e.message || c)) || "ไม่ทราบสาเหตุ") + ") ลองกดใหม่อีกครั้ง";
   }
+  // ซ่อม JSON ที่ AI ใส่ " ซ้อนในข้อความ / ขึ้นบรรทัดใหม่ในสตริง / ลูกน้ำเกิน
+  function repairJSON(t) {
+    let out = "", inStr = false;
+    for (let i = 0; i < t.length; i++) {
+      const c = t[i];
+      if (inStr) {
+        if (c === "\\") { out += c + (t[i + 1] || ""); i++; continue; }
+        if (c === "\n") { out += "\\n"; continue; }
+        if (c === "\r" || c === "\t") { out += " "; continue; }
+        if (c === '"') {
+          let j = i + 1; while (j < t.length && /\s/.test(t[j])) j++;
+          if (j >= t.length || ",:}]".includes(t[j])) { inStr = false; out += c; } else out += '\\"';
+          continue;
+        }
+        out += c;
+      } else { if (c === '"') inStr = true; out += c; }
+    }
+    return out.replace(/,\s*([}\]])/g, "$1");
+  }
   function parseJSON(text) {
     const s = text.indexOf("{"), e = text.lastIndexOf("}");
     if (s < 0 || e < s) throw { message: "AI ไม่ได้ตอบเป็นข้อมูลที่อ่านได้" };
-    return JSON.parse(text.slice(s, e + 1));
+    const raw = text.slice(s, e + 1);
+    try { return JSON.parse(raw); } catch (e1) {
+      try { return JSON.parse(repairJSON(raw)); } catch (e2) { throw { message: "AI ตอบข้อมูลไม่ครบ ลองกดใหม่อีกครั้ง" }; }
+    }
   }
-  async function aiJSON(prompt, box, label) {
+  function setCost(c) { const el = $("#ai-cost"); if (!c || !el) return; el.hidden = false; el.textContent = `AI เดือนนี้ ≈ ฿${(+c.thb || 0).toLocaleString("th-TH", { maximumFractionDigits: 0 })}`; el.title = `ค่าใช้จ่าย AI เดือนนี้ประมาณ ${c.thb} บาท (${c.calls} ครั้ง, ค้นเว็บ ${c.searches} ครั้ง)`; }
+  window.addEventListener("hq-cost", (e) => setCost(e.detail));
+  async function aiJSON(prompt, box, label, o) {
+    o = o || {};
     box.className = "out";
     box.innerHTML = `<div class="gen"><div class="gen-top"><span>${esc(label)}</span><span class="num" data-n>0 ตัวอักษร</span></div><div class="gen-bar"><i></i></div><p class="gen-tail" data-tail>กำลังคิด…</p></div>`;
     const nEl = box.querySelector("[data-n]"), tail = box.querySelector("[data-tail]");
-    const r = await sample(prompt, { modelTier: "default", cache: false, onText: (u) => {
+    const opts = Object.assign({ modelTier: "default", cache: false }, GH ? { json: true, search: !!o.search, tier: o.tier || "default", maxTokens: o.maxTokens } : {});
+    if (o.search && GH) tail.textContent = "กำลังค้นข้อมูลล่าสุดจากเว็บ…";
+    const r = await sample(prompt, Object.assign(opts, { onText: (u) => {
       nEl.textContent = u.text.length.toLocaleString("th-TH") + " ตัวอักษร";
       const plain = u.text.replace(/[{}\[\]"]/g, " ").replace(/\s+/g, " ").replace(/\b[a-z_]+:/g, "");
       tail.textContent = plain.slice(-120);
-    } });
-    return parseJSON(r.text);
+    } }));
+    const j = parseJSON(r.text);
+    if (r.sources && r.sources.length) j._sources = r.sources;
+    return j;
   }
   function recentAvoid(kind, days) {
     const today = $("#tt-date").value || bkkDate();
@@ -1247,16 +1364,18 @@ select option { background: var(--bg1); color: var(--fg); }
     $("#tt-pillar").value = String(wd); $("#pillar-pill").textContent = PILLARS[wd].t;
     $("#today-label").textContent = thaiLabel(bkkDate());
   }
+  const ttSearch = () => GH && ([3, 6].includes(+$("#tt-pillar").value) || /ข่าว|ล่าสุด|หุ้น|ดอกเบี้ย|ภาษี|ราคา|ปี 25|ปี 20/.test($("#tt-topic").value));
   function ttPrompt(extra) {
     const p = PILLARS[+$("#tt-pillar").value];
+    const pd = planDay($("#tt-date").value);
     const avoid = recentAvoid("TT", 30).map((l) => `- ${l.topic} | มุม: ${l.angle} | hook: ${l.hook}`).join("\n") || "(ยังไม่มี)";
     const aud = $("#tt-aud").value;
     return `คุณคือทีมเขียนสคริปต์ TikTok ช่องการเงิน/การใช้ชีวิตภาษาไทย เจ้าของช่องเป็นตัวแทนประกันชีวิต โทน: สนุก ตลก เล่าเป็นสตอรี่ ภาษาพูด ยกเรื่องใกล้ตัว แต่ข้อมูลถูกต้อง
-${RULES}
+${RULES}${SEARCH_NOTE(ttSearch())}
 วันที่: ${thaiLabel($("#tt-date").value)}
 เสาคอนเทนต์: ${p.t} (ตัวอย่างแนว: ${p.ex})
 กลุ่มเป้าหมาย: ${aud === "auto" ? "เลือกหนึ่งกลุ่มที่เหมาะที่สุดจาก First Jobber 22–30 / วัยทำงาน 30–45 / คนมีหนี้-เงินไม่พอใช้ / ฟรีแลนซ์-เจ้าของกิจการเล็ก" : aud}
-หัวข้อที่เจ้าของช่องให้มา: ${$("#tt-topic").value.trim() || "(ไม่มี ให้คิดหัวข้อใหม่ที่ไม่ซ้ำ)"}
+หัวข้อที่เจ้าของช่องให้มา: ${$("#tt-topic").value.trim() || (pd && pd.tiktok ? `(จากแผนสัปดาห์) ${pd.tiktok.title} · hook ที่วางไว้: ${pd.tiktok.hook || "-"}` : "(ไม่มี ให้คิดหัวข้อใหม่ที่ไม่ซ้ำ)")}
 รูปแบบเล่าที่แนะนำวันนี้: ${FORMATS[Math.floor(Math.random() * FORMATS.length)]} (เปลี่ยนได้ถ้าไม่เข้ากับหัวข้อ)
 หัวข้อ/มุม/Hook ที่ใช้ไปแล้ว ห้ามซ้ำ:
 ${avoid}
@@ -1270,7 +1389,7 @@ ${TT_SCHEMA}`;
     const btn = $("#tt-gen"); btn.disabled = true;
     const extra = refine && day.tiktok ? `นี่คือสคริปต์เดิม ให้ปรับตามคำสั่ง "${refine}" โดยคงหัวข้อเดิม แล้วตอบสคริปต์ทั้งชุดใหม่:\n${JSON.stringify(day.tiktok)}` : "";
     try {
-      const r = await aiJSON(ttPrompt(extra), $("#tt-out"), refine ? `กำลังปรับ: ${refine}` : "ทีมเขียนสคริปต์กำลังเขียน");
+      const r = await aiJSON(ttPrompt(extra), $("#tt-out"), refine ? `กำลังปรับ: ${refine}` : "ทีมเขียนสคริปต์กำลังเขียน", { search: !refine && ttSearch(), maxTokens: 5000 });
       if (!r || !r.scenes) throw { message: "รูปแบบคำตอบไม่ครบ" };
       day.tiktok = r; day.ttUsed = false;
       renderTikTok(); saveDay(); toast("สคริปต์พร้อมแล้ว");
@@ -1283,6 +1402,7 @@ ${TT_SCHEMA}`;
     L.push(`💥 ${r.punchline || ""}`, `📣 CTA: ${r.cta || ""}`, "", `⚠️ ${r.disclaimer || ""}`);
     return L.join("\n");
   }
+  function srcLinks(src) { return src && src.length ? `<span class="srcs">${src.slice(0, 5).map((x) => `<a href="${esc(x.url)}" target="_blank" rel="noopener">${esc(x.title)}</a>`).join("")}</span>` : ""; }
   function statusPill(state) {
     return state === "done" ? `<span class="pill good">เสร็จแล้ว</span>` : state === "ready" ? `<span class="pill acc">พร้อมใช้</span>` : `<span class="pill mute">รอสร้าง</span>`;
   }
@@ -1300,7 +1420,7 @@ ${TT_SCHEMA}`;
       <dl class="kv"><dt>กลุ่มเป้าหมาย</dt><dd>${esc(r.audience)}</dd><dt>Hook หลัก</dt><dd><b>${esc(r.hooks && r.hooks[0])}</b><br><span class="note">บนจอ: ${esc(r.hook_onscreen)}</span></dd>
       <dt>Hook สำรอง</dt><dd><ol class="hooks">${(r.hooks || []).slice(1).map((h) => `<li>${esc(h)}</li>`).join("")}</ol></dd></dl>
       <div class="scenes">${(r.scenes || []).map((s, i) => `<div class="scene"><span class="no">ซีน ${i + 1}</span><div><p class="line">${esc(s.line)}</p><p class="meta">ภาพ: ${esc(s.visual)}${s.onscreen ? " · บนจอ: " + esc(s.onscreen) : ""}</p></div></div>`).join("")}</div>
-      <dl class="kv"><dt>Punchline</dt><dd>${esc(r.punchline)}</dd><dt>CTA</dt><dd>${esc(r.cta)}</dd><dt>เพลง/เสียง</dt><dd>${esc(r.music)}</dd><dt>Disclaimer</dt><dd>${esc(r.disclaimer)}</dd><dt>ต้องเช็กข้อมูล</dt><dd class="note">${esc(r.sources_note || "-")}</dd></dl>
+      <dl class="kv"><dt>Punchline</dt><dd>${esc(r.punchline)}</dd><dt>CTA</dt><dd>${esc(r.cta)}</dd><dt>เพลง/เสียง</dt><dd>${esc(r.music)}</dd><dt>Disclaimer</dt><dd>${esc(r.disclaimer)}</dd><dt>ต้องเช็กข้อมูล</dt><dd class="note">${esc(r.sources_note || "-")}${srcLinks(r._sources)}</dd></dl>
       ${copyBlock("แคปชัน + แฮชแท็ก", caption)}
       <div class="row">
         <button class="mini" data-copy="tt-full">คัดลอกสคริปต์ทั้งหมด</button><span id="tt-full" hidden data-text="${esc(scriptText(r))}"></span>
@@ -1347,6 +1467,8 @@ ${TT_SCHEMA}`;
     ["name", "price", "link", "note"].forEach((k) => ($(`#${id}-${k}`).value = i[k] || ""));
     $(`#${id}-cat`).value = i.cat || SLOTS.find((s) => s.id === id).cat;
     $(`#${id}-posted`).checked = !!st.posted;
+    const pd = planDay($("#tt-date").value), idx = SLOTS.findIndex((s) => s.id === id), ps = pd && pd.sp && pd.sp[idx];
+    $(`#${id}-name`).placeholder = ps && ps.product ? `แผน: ${ps.product} (เว้นว่าง = ใช้ไอเดียนี้)` : "เว้นว่าง = AI เสนอให้";
     renderSlot(id);
   }
   async function genSlot(s, refine) {
@@ -1362,7 +1484,7 @@ ${TT_SCHEMA}`;
 ${RULES}
 ช่วงเวลาโพสต์: ${s.time} (${s.who}) หมวด: ${i.cat}
 ${hasProduct ? `สินค้า: ${i.name} ราคา: ${i.price || "ไม่ระบุ"} ลิงก์: ${i.link || "[ลิงก์]"} ข้อมูลจากหน้าสินค้า: ${i.note || "-"}` : `ยังไม่มีสินค้า ให้เสนอสินค้า 1 ชนิดที่เหมาะกับหมวดและช่วงเวลานี้ (ประเภทสินค้าทั่วไป ไม่ระบุยี่ห้อ) พร้อมคีย์เวิร์ดค้นใน Shopee ช่วงราคาที่ควรเลือก และเกณฑ์เลือกร้าน ใช้ [ลิงก์] แทนลิงก์ อย่าแต่งราคา/โปรที่ไม่รู้`}
-สินค้าอื่นที่โพสต์วันนี้: ${otherToday}
+${(() => { const pd = planDay($("#tt-date").value), ps = pd && pd.sp && pd.sp[SLOTS.indexOf(s)]; return !hasProduct && ps && ps.product ? `ไอเดียจากแผนสัปดาห์: ${ps.product} (pain: ${ps.pain || "-"}) ใช้อันนี้ถ้าไม่ซ้ำ\n` : ""; })()}สินค้าอื่นที่โพสต์วันนี้: ${otherToday}
 สินค้าที่ใช้ไปใน 14 วัน (ถ้าเป็นชิ้นเดิมต้องใช้ Pain Point คนละมุม หรือเสนอชิ้นใหม่):
 ${used}
 สูตรหลัก: ${formula}
@@ -1371,7 +1493,7 @@ ${extra}
 ตอบเป็น JSON อย่างเดียว ไม่มีข้อความอื่น:
 ${SP_SCHEMA(!hasProduct)}`;
     try {
-      const r = await aiJSON(prompt, $(`#${s.id}-out`), refine ? `กำลังปรับ: ${refine}` : `ทีมปักตะกร้ากำลังเขียนโพสต์ ${s.time}`);
+      const r = await aiJSON(prompt, $(`#${s.id}-out`), refine ? `กำลังปรับ: ${refine}` : `ทีมปักตะกร้ากำลังเขียนโพสต์ ${s.time}`, { tier: "fast" });
       if (!r || !r.versions) throw { message: "รูปแบบคำตอบไม่ครบ" };
       if (i.link) r.first_comment = String(r.first_comment || "").replace(/\[ลิงก์\]/g, i.link);
       st.output = r; st.posted = false; $(`#${s.id}-posted`).checked = false;
@@ -1536,6 +1658,8 @@ ${SP_SCHEMA(!hasProduct)}`;
       dayRef = db.collection(`data/users/${uid}/days/items`).doc(date);
       try { const snap = await dayRef.get(); if (snap.exists) day = Object.assign(day, snap.data()); } catch (e) {}
     }
+    await ensurePlan(mondayOf(date));
+    ttHint();
     renderTikTok(); SLOTS.forEach((s) => fillSlot(s.id)); renderHome();
   }
 
@@ -1650,11 +1774,12 @@ ${r.metrics.map((m) => `${m.name}: ${m.value} (เกณฑ์ ${m.target}) ส�
   }
   function renderLeads() {
     if (!leadsData) return;
+    const ae = document.activeElement; if (ae && /INPUT|SELECT/.test(ae.tagName) && $("#ld-list").contains(ae)) return; // กำลังพิมพ์โน้ตอยู่
     const { sum, leads } = leadsData, n = (k) => +sum[k] || 0;
     $("#ld-total").textContent = n("ทั้งหมด") || leads.length;
     $("#ld-avg").textContent = n("คะแนนเฉลี่ย");
     $("#ld-hot").textContent = n("Lead:Hot"); $("#ld-warm").textContent = n("Lead:Warm"); $("#ld-cold").textContent = n("Lead:Cold");
-    $("#ld-today").textContent = `วันนี้ ${n("วัน:" + bkkDate())} คน`;
+    $("#ld-today").textContent = `วันนี้ ${n("วัน:" + bkkDate())} คน` + (leads.some(needFollow) ? ` · ต้องติดตาม ${leads.filter(needFollow).length} คน` : "");
     $("#ld-updated").textContent = sum["อัปเดต"] ? `อัปเดตชีต ${sum["อัปเดต"]}` : "";
     // 14-day chart
     const days = Object.keys(sum).filter((k) => k.indexOf("วัน:") === 0).sort();
@@ -1674,9 +1799,11 @@ ${r.metrics.map((m) => `${m.name}: ${m.value} (เกณฑ์ ${m.target}) ส�
     const wmax = Math.max(1, ...weak.map((w) => w[1]));
     $("#ld-weak").innerHTML = weak.map(([t, v]) => `<div class="ld-bar"><span>${esc(t)}</span><i style="--w:${(v / wmax) * 100}%"></i><b class="num">${v}</b></div>`).join("");
     // list
-    const list = leads.filter((l) => leadFilter === "all" || l.lead === leadFilter);
+    const list = leads.filter((l) => leadFilter === "all" || (leadFilter === "follow" ? needFollow(l) : l.lead === leadFilter));
+    const fuN = leads.filter(needFollow).length;
     const pill = (t) => t === "Hot" ? `<span class="pill warn">🔥 Hot</span>` : t === "Warm" ? `<span class="pill acc">🌤 Warm</span>` : `<span class="pill mute">❄️ Cold</span>`;
-    $("#ld-list").innerHTML = list.length ? list.map((l, i) => `<div class="item ld-item"><span class="d">${esc(l.time)}</span><span class="k">${pill(l.lead)}</span><span class="t"><b>${esc(l.name)}</b> · <span class="num">${l.score}</span>/100 ${esc(l.level)}<small>${esc(l.income)} · ดูแล ${esc(l.dep)} · ${esc(l.type)}${l.weak ? " · ควรดูแล: " + esc(l.weak) : ""}</small>${l.contact ? `<small>ติดต่อ: <b>${esc(l.contact)}</b></small>` : ""}</span><span class="row">${l.contact ? `<button class="mini" data-ldcopy="${i}">คัดลอกเบอร์/ID</button>` : ""}<button class="mini" data-ldmsg="${i}">ข้อความทักกลับ</button></span></div>`).join("") : `<p class="empty-row">ยังไม่มี Lead ในกลุ่มนี้</p>`;
+    void fuN;
+    $("#ld-list").innerHTML = list.length ? list.map((l, i) => `<div class="item ld-item"><span class="d">${esc(l.time)}</span><span class="k">${pill(l.lead)}</span><span class="t"><b>${esc(l.name)}</b> · <span class="num">${l.score}</span>/100 ${esc(l.level)}<small>${esc(l.income)} · ดูแล ${esc(l.dep)} · ${esc(l.type)}${l.weak ? " · ควรดูแล: " + esc(l.weak) : ""}</small>${l.contact ? `<small>ติดต่อ: <b>${esc(l.contact)}</b></small>` : ""}${crmHTML(l, i)}</span><span class="row">${l.contact ? `<button class="mini" data-ldcopy="${i}">คัดลอกเบอร์/ID</button>` : ""}<button class="mini" data-ldmsg="${i}">ข้อความทักกลับ</button></span></div>`).join("") : `<p class="empty-row">ยังไม่มี Lead ในกลุ่มนี้</p>`;
     $("#ld-list").dataset.filter = leadFilter;
     $("#ld-list")._list = list;
   }
@@ -1709,6 +1836,178 @@ ${r.metrics.map((m) => `${m.name}: ${m.value} (เกณฑ์ ${m.target}) ส�
     toast("กำลังรีเฟรช Lead");
   });
 
+  // ---------------- weekly plan ----------------
+  const plans = {};
+  const mondayOf = (iso) => shiftDate(iso, -((weekday(iso) + 6) % 7));
+  function ttHint() { const pd = planDay($("#tt-date").value); $("#tt-topic").placeholder = pd && pd.tiktok && pd.tiktok.title ? `แผน: ${pd.tiktok.title} (เว้นว่าง = ใช้หัวข้อนี้)` : "เว้นว่าง = AI คิดหัวข้อใหม่ให้"; }
+  function planDay(iso) { const pl = plans[mondayOf(iso)]; return pl && Array.isArray(pl.days) ? pl.days.find((d) => d.date === iso) || null : null; }
+  async function ensurePlan(week) {
+    if (week in plans || !db || !uid) return plans[week];
+    try { const snap = await db.collection(`data/users/${uid}/plans/items`).doc(week).get(); plans[week] = snap.exists ? snap.data() : null; } catch (e) { plans[week] = null; }
+    return plans[week];
+  }
+  async function loadPlan() {
+    if (!$("#pl-week").value) $("#pl-week").value = mondayOf(bkkDate());
+    const wk = mondayOf($("#pl-week").value); $("#pl-week").value = wk;
+    await ensurePlan(wk); renderPlan();
+  }
+  $("#pl-week").addEventListener("change", loadPlan);
+  function renderPlan() {
+    const wk = $("#pl-week").value, pl = plans[wk], out = $("#pl-out");
+    $("#pl-ics").disabled = !pl;
+    $("#pl-gen").textContent = pl ? "วางแผนใหม่" : "ให้ AI วางแผน";
+    if (!pl) { out.className = "out empty"; out.textContent = "ยังไม่มีแผนของสัปดาห์นี้ กด “ให้ AI วางแผน”"; return; }
+    out.className = "out fade-in";
+    const today = bkkDate();
+    out.innerHTML = `${pl.week_note ? `<p>${esc(pl.week_note)}</p>` : ""}
+      ${(pl.events || []).length ? `<div class="pl-events">${pl.events.map((e) => `<span class="pill acc plain">${esc(e.date ? e.date.slice(5) : "")} ${esc(e.name)}</span>`).join("")}</div>` : ""}
+      <div class="pl-days">${(pl.days || []).map((d) => `
+        <article class="pl-day ${d.date === today ? "is-today" : ""}">
+          <header><b>${DAYS[weekday(d.date)]} ${esc(d.date.slice(8))}/${esc(d.date.slice(5, 7))}</b><span class="note">${esc(PILLARS[weekday(d.date)].t)}</span>${d.date === today ? '<span class="pill good plain">วันนี้</span>' : ""}</header>
+          <p class="pl-tt">🎬 <b>${esc(d.tiktok && d.tiktok.title)}</b><br><span class="note">Hook: ${esc(d.tiktok && d.tiktok.hook)}${d.tiktok && d.tiktok.format ? " · " + esc(d.tiktok.format) : ""}</span></p>
+          <ul class="pl-sp">${(d.sp || []).map((x, i) => `<li><span class="t">${SLOTS[i] ? SLOTS[i].time : esc(x.time)}</span> ${esc(x.product)} <span class="note">· ${esc(x.pain)}</span></li>`).join("")}</ul>
+          ${d.ic ? `<p class="note">📚 IC: ${esc(d.ic)}</p>` : ""}${d.other ? `<p class="note">📌 ${esc(d.other)}</p>` : ""}
+        </article>`).join("")}</div>
+      ${pl.sources_note ? `<p class="note">ต้องเช็ก: ${esc(pl.sources_note)}${srcLinks(pl._sources)}</p>` : srcLinks(pl._sources)}`;
+  }
+  $("#pl-gen").addEventListener("click", async () => {
+    if (!sample) { toast("ต้องเชื่อม AI ก่อน"); return; }
+    const wk = mondayOf($("#pl-week").value || bkkDate()), dates = [...Array(7)].map((_, i) => shiftDate(wk, i));
+    const btn = $("#pl-gen"); btn.disabled = true;
+    const avoidTT = logs.filter((l) => l.kind === "TT" && daysBetween(l.date, wk) <= 30).map((l) => `- ${l.topic} | ${l.angle}`).slice(0, 40).join("\n") || "(ยังไม่มี)";
+    const avoidSP = logs.filter((l) => l.kind === "SP" && daysBetween(l.date, wk) <= 14).map((l) => `- ${l.topic}`).slice(0, 40).join("\n") || "(ยังไม่มี)";
+    const prompt = `คุณคือทีมวางแผนคอนเทนต์รายสัปดาห์ ของช่อง TikTok การเงิน/การใช้ชีวิต (เจ้าของเป็นตัวแทนประกันชีวิต กำลังเตรียมสอบ IC) และสาย Shopee Affiliate โพสต์กลุ่ม Facebook วันละ 3 ช่วง
+${RULES}${SEARCH_NOTE(GH)}
+สัปดาห์: ${dates[0]} ถึง ${dates[6]} (เวลาไทย)
+${GH ? "ค้นเว็บหา: ข่าว/เทรนด์การเงินไทยของสัปดาห์นี้ วันหยุด วันสำคัญ วันเงินเดือนออก และแคมเปญ Shopee (วันที่เลขซ้ำ, Payday) ที่ตรงกับสัปดาห์นี้" : "ใส่วันสำคัญที่รู้แน่นอน (เงินเดือนออก 25/สิ้นเดือน, วันที่เลขซ้ำของ Shopee) ถ้าไม่แน่ใจให้บอกใน sources_note"}
+เสาคอนเทนต์ตามวัน: ${dates.map((d) => `${d}=${PILLARS[weekday(d)].t}`).join(" / ")}
+ช่วง Shopee: 11:00 ของใช้ในบ้าน/ครัว ของถูกใช้คุ้ม · 17:00 แกดเจ็ต/ไอที ของใช้ส่วนตัว · 19:30 แม่และเด็ก/สัตว์เลี้ยง โปรแรง (สินค้าเป็นประเภททั่วไป ไม่ระบุยี่ห้อ)
+CTA ไป Financial Health Check ฟรี อย่างน้อย 2 คลิป รูปแบบเล่าหมุนไม่ซ้ำ: ${FORMATS.join(", ")}
+งาน IC: วางหัวข้ออ่านวันละ 30–45 นาที ไล่จากพื้นฐานการลงทุน ตราสารหนี้ ตราสารทุน กองทุนรวม อนุพันธ์ ความเสี่ยง/ผลตอบแทน กฎระเบียบ-จรรยาบรรณ และ Unit Linked
+${$("#pl-note").value.trim() ? "เจ้าของอยากเน้น: " + $("#pl-note").value.trim() : ""}
+หัวข้อ TikTok ที่ใช้ไปแล้วใน 30 วัน ห้ามซ้ำ:\n${avoidTT}
+สินค้าที่ใช้ไปใน 14 วัน หลีกเลี่ยง:\n${avoidSP}
+ตอบเป็น JSON:
+{"week_note":"ภาพรวมสัปดาห์ 1-2 ประโยค","events":[{"date":"YYYY-MM-DD","name":""}],"days":[{"date":"YYYY-MM-DD","tiktok":{"title":"","hook":"","format":""},"sp":[{"time":"11:00","product":"","pain":""},{"time":"17:00","product":"","pain":""},{"time":"19:30","product":"","pain":""}],"ic":"หัวข้อ IC ที่อ่านวันนี้","other":"งานอื่น (ไม่บังคับ)"}],"sources_note":""}
+ต้องมีครบ 7 วันตามลำดับวันที่`;
+    const out = $("#pl-out");
+    try {
+      const r = await aiJSON(prompt, out, "ทีมวางแผนกำลังวางแผน 7 วัน", { search: true, maxTokens: 6000 });
+      if (!r || !Array.isArray(r.days) || !r.days.length) throw { message: "แผนไม่ครบ ลองใหม่อีกครั้ง" };
+      r.days = dates.map((d, i) => Object.assign({}, r.days.find((x) => x.date === d) || r.days[i] || {}, { date: d }));
+      r.createdAt = Date.now(); plans[wk] = r;
+      if (db && uid) await db.collection(`data/users/${uid}/plans/items`).doc(wk).set(JSON.parse(JSON.stringify(r)));
+      renderPlan(); toast("แผน 7 วันพร้อมแล้ว");
+      if (dates.includes($("#tt-date").value)) { ttHint(); SLOTS.forEach((x) => fillSlot(x.id)); }
+    } catch (e) { out.className = "out"; out.innerHTML = `<p class="err">${esc(aiErr(e))}</p>`; }
+    btn.disabled = false;
+  });
+  // .ics (เวลาไทย UTC+7 → แปลงเป็น UTC)
+  function icsTime(iso, hm) { const [h, m] = hm.split(":").map(Number); const d = new Date(Date.UTC(+iso.slice(0, 4), +iso.slice(5, 7) - 1, +iso.slice(8, 10), h - 7, m)); return d.toISOString().replace(/[-:]/g, "").slice(0, 15) + "Z"; }
+  const addMin = (hm, n) => { const t = hm.split(":").map(Number), x = t[0] * 60 + t[1] + n; return `${String(Math.floor(x / 60)).padStart(2, "0")}:${String(x % 60).padStart(2, "0")}`; };
+  const icsEsc = (t) => String(t || "").replace(/\\/g, "\\\\").replace(/\n/g, "\\n").replace(/([,;])/g, "\\$1");
+  $("#pl-ics").addEventListener("click", () => {
+    const wk = $("#pl-week").value, pl = plans[wk]; if (!pl) return;
+    const shoot = $("#pl-shoot").value || "20:30", post = $("#pl-post").value || "18:00";
+    const ev = [], stamp = new Date().toISOString().replace(/[-:]/g, "").slice(0, 15) + "Z";
+    const add = (date, start, mins, title, desc, alarm) => ev.push(["BEGIN:VEVENT", `UID:${wk}-${ev.length}@content-hq`, `DTSTAMP:${stamp}`, `DTSTART:${icsTime(date, start)}`, `DTEND:${icsTime(date, addMin(start, mins))}`, `SUMMARY:${icsEsc(title)}`, `DESCRIPTION:${icsEsc(desc)}`].concat(alarm ? ["BEGIN:VALARM", "ACTION:DISPLAY", `DESCRIPTION:${icsEsc(title)}`, "TRIGGER:-PT10M", "END:VALARM"] : []).concat(["END:VEVENT"]).join("\r\n"));
+    pl.days.forEach((d) => {
+      const tt = d.tiktok || {};
+      add(shiftDate(d.date, -1), shoot, 60, `[TT] ถ่าย/ตัดต่อ: ${tt.title || ""}`, `Hook: ${tt.hook || ""}\nรูปแบบ: ${tt.format || ""}`, true);
+      add(d.date, post, 15, `[TT] โพสต์: ${tt.title || ""}`, `Hook: ${tt.hook || ""}`, true);
+      (d.sp || []).forEach((x, i) => { const t = SLOTS[i] ? SLOTS[i].time : x.time; add(d.date, t, 15, `[SP] ${t} ${x.product || ""}`, `Pain point: ${x.pain || ""}`, true); });
+      if (d.ic) add(d.date, "21:30", 45, `[IC] อ่านหนังสือ: ${d.ic}`, "ทำข้อสอบจำลองในแท็บ ติว IC ต่อได้", false);
+      if (weekday(d.date) === 0) add(d.date, "20:00", 30, "[REPORT] สรุปผลสัปดาห์", "เปิด HQ ดู Lead และวางแผนสัปดาห์หน้า", true);
+    });
+    const ics = ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//Content HQ//TH", "CALSCALE:GREGORIAN", "X-WR-CALNAME:Content HQ", ...ev, "END:VCALENDAR"].join("\r\n");
+    const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([ics], { type: "text/calendar;charset=utf-8" })); a.download = `content-hq-${wk}.ics`;
+    document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+    toast(`ดาวน์โหลด ${ev.length} รายการแล้ว เปิดไฟล์เพื่อเพิ่มลงปฏิทิน`);
+  });
+
+  // ---------------- IC quiz ----------------
+  const IC_TOPICS = ["ความรู้พื้นฐานการลงทุน & มูลค่าเงินตามเวลา", "ตราสารหนี้ (ราคา อายุ YTM Duration)", "ตราสารทุน & การวิเคราะห์หุ้นเบื้องต้น", "กองทุนรวม (ประเภท ค่าธรรมเนียม NAV)", "อนุพันธ์เบื้องต้น", "ความเสี่ยง ผลตอบแทน & การกระจายความเสี่ยง", "การจัดสรรสินทรัพย์ & ระดับความเสี่ยงผู้ลงทุน (Suitability)", "กฎระเบียบ จรรยาบรรณผู้แนะนำการลงทุน", "ภาษีการลงทุน & กองทุนลดหย่อนภาษี", "ประกันควบการลงทุน (Unit Linked)"];
+  $("#ic-topic").innerHTML = IC_TOPICS.map((t) => `<option>${esc(t)}</option>`).join("");
+  let icQuiz = null, icWrong = [], icAttempts = [];
+  function renderIC() {
+    const last = icAttempts.slice(0, 10), avg = last.length ? Math.round(last.reduce((s, a) => s + (a.score / a.total) * 100, 0) / last.length) : null;
+    $("#ic-stat").textContent = icAttempts.length ? `ทำไปแล้ว ${icAttempts.length} ชุด · เฉลี่ย 10 ชุดล่าสุด ${avg}%` : "";
+    $("#ic-redo").hidden = !icWrong.length;
+    $("#ic-wrong").innerHTML = icWrong.length ? icWrong.map((w) => `<div class="ic-w"><p><b>${esc(w.q)}</b></p><p class="note">คำตอบที่ถูก: ${esc((w.choices || [])[w.answer])}</p><p class="note">${esc(w.explain)}</p><button class="mini" data-icok="${esc(w._id)}">เข้าใจแล้ว เอาออก</button></div>`).join("") : `<p class="empty-row">ยังไม่มี</p>`;
+  }
+  $("#ic-wrong").addEventListener("click", async (e) => {
+    const b = e.target.closest("[data-icok]"); if (!b || !db) return;
+    try { await db.collection(`data/users/${uid}/icwrong/items`).doc(b.dataset.icok).delete(); toast("เอาออกแล้ว"); } catch (err) { toast("ลบไม่สำเร็จ"); }
+  });
+  async function genIC(fromWrong) {
+    if (!sample) { toast("ต้องเชื่อม AI ก่อน"); return; }
+    const topic = fromWrong ? "ทบทวนเรื่องที่เคยตอบผิด" : ($("#ic-custom").value.trim() || $("#ic-topic").value), n = +$("#ic-n").value;
+    const btn = $("#ic-gen"); btn.disabled = true;
+    const wrongCtx = fromWrong ? "\nเรื่องที่ผู้เรียนเคยตอบผิด (ออกข้อสอบใหม่ที่วัดแนวคิดเดียวกัน ห้ามใช้โจทย์เดิม):\n" + icWrong.slice(0, 12).map((w) => `- ${w.topic || ""}: ${w.q}`).join("\n") : "";
+    const prompt = `คุณคือติวเตอร์สอบใบอนุญาตผู้แนะนำการลงทุน (IC) ของไทย ออกข้อสอบปรนัย 4 ตัวเลือก ภาษาไทย ${n} ข้อ เรื่อง: ${topic}${wrongCtx}
+ระดับความยากใกล้เคียงข้อสอบจริง มีทั้งข้อความรู้และข้อคำนวณ (ถ้าเรื่องนั้นมีการคำนวณ) คำตอบถูกมีข้อเดียว คำอธิบายสั้น กระชับ บอกเหตุผลว่าทำไมข้ออื่นผิด
+ถ้าเป็นตัวเลขกฎเกณฑ์ที่อาจเปลี่ยนตามเวลา ให้ระบุในคำอธิบายว่า "ควรตรวจกับประกาศล่าสุด"
+ตอบเป็น JSON: {"questions":[{"q":"","choices":["","","",""],"answer":0,"explain":"","topic":""}]} (answer คือเลขลำดับ 0-3)`;
+    const out = $("#ic-out");
+    try {
+      const r = await aiJSON(prompt, out, "กำลังออกข้อสอบ", { maxTokens: 6000 });
+      const qs = (r.questions || []).filter((q) => q && q.q && Array.isArray(q.choices) && q.choices.length >= 2);
+      if (!qs.length) throw { message: "ข้อสอบไม่ครบ ลองใหม่อีกครั้ง" };
+      icQuiz = { topic, qs, picks: {} }; renderQuiz();
+    } catch (e) { out.className = "out"; out.innerHTML = `<p class="err">${esc(aiErr(e))}</p>`; }
+    btn.disabled = false;
+  }
+  function renderQuiz(checked) {
+    const out = $("#ic-out"), q = icQuiz; out.className = "out fade-in";
+    out.innerHTML = `<h3>${esc(q.topic)}</h3>` + q.qs.map((x, i) => `<fieldset class="ic-q ${checked ? (q.picks[i] === +x.answer ? "ok" : "bad") : ""}"><legend><span class="num">${i + 1}.</span> ${esc(x.q)}</legend>
+      ${x.choices.map((c, k) => `<label class="ic-c ${checked && k === +x.answer ? "right" : ""}"><input type="radio" name="icq${i}" value="${k}" ${q.picks[i] === k ? "checked" : ""} ${checked ? "disabled" : ""}> ${esc(c)}</label>`).join("")}
+      ${checked ? `<p class="note">${esc(x.explain)}</p>` : ""}</fieldset>`).join("") +
+      (checked ? `<p class="ic-score">ได้ <b class="num">${q.score}</b> / ${q.qs.length}</p><div class="row"><button class="btn" id="ic-again">ออกชุดใหม่เรื่องเดิม</button></div>` : `<button class="btn" id="ic-check">ตรวจคำตอบ</button>`);
+    out.querySelectorAll("input[type=radio]").forEach((r) => r.addEventListener("change", () => (q.picks[+r.name.slice(3)] = +r.value)));
+    const c = $("#ic-check"); if (c) c.addEventListener("click", checkQuiz);
+    const a = $("#ic-again"); if (a) a.addEventListener("click", () => genIC(false));
+  }
+  async function checkQuiz() {
+    const q = icQuiz;
+    if (Object.keys(q.picks).length < q.qs.length && !confirmSkip()) return;
+    q.score = q.qs.filter((x, i) => q.picks[i] === +x.answer).length;
+    renderQuiz(true); toast(`ได้ ${q.score}/${q.qs.length}`);
+    if (!db || !uid) return;
+    try {
+      await db.collection(`data/users/${uid}/ic/items`).add({ date: bkkDate(), topic: q.topic, score: q.score, total: q.qs.length, createdAt: Date.now() });
+      for (const [i, x] of q.qs.entries()) if (q.picks[i] !== +x.answer) await db.collection(`data/users/${uid}/icwrong/items`).add({ q: x.q, choices: x.choices, answer: +x.answer, explain: x.explain || "", topic: x.topic || q.topic, createdAt: Date.now() });
+    } catch (e) { banner("บันทึกผลสอบไม่สำเร็จ"); }
+  }
+  let skipWarned = false;
+  function confirmSkip() { if (skipWarned) return true; skipWarned = true; toast("ยังตอบไม่ครบ กดตรวจอีกครั้งถ้าจะส่งเลย"); return false; }
+  $("#ic-gen").addEventListener("click", () => genIC(false));
+  $("#ic-redo").addEventListener("click", () => { selectTab("ic"); genIC(true); });
+
+  // ---------------- lead CRM (สถานะ/โน้ต/วันติดตาม) ----------------
+  const LD_STATUS = ["ใหม่", "ทักแล้ว", "นัดแล้ว", "ปิดการขาย", "ไม่สนใจ"];
+  let leadMeta = {};
+  const leadId = (l) => { let h = 5381; const s = `${l.time}|${l.contact}|${l.name}`; for (let i = 0; i < s.length; i++) h = ((h << 5) + h + s.charCodeAt(i)) >>> 0; return "L" + h.toString(36); };
+  const isOpen = (m) => !m || !["ปิดการขาย", "ไม่สนใจ"].includes(m.status);
+  const needFollow = (l) => { const m = leadMeta[leadId(l)]; return !!(m && m.follow && m.follow <= bkkDate() && isOpen(m)); };
+  async function saveMeta(l, patch) {
+    const id = leadId(l), m = Object.assign({ name: l.name, contact: l.contact, status: "ใหม่" }, leadMeta[id] || {}, patch, { updatedAt: Date.now() });
+    leadMeta[id] = m;
+    if (!db || !uid) { toast("ต้องเชื่อมฐานข้อมูลก่อนจึงจะจำค่าได้"); return; }
+    try { await db.collection(`data/users/${uid}/leadmeta/items`).doc(id).set(m); toast("บันทึกแล้ว"); } catch (e) { toast("บันทึกไม่สำเร็จ"); }
+  }
+  function crmHTML(l, i) {
+    const m = leadMeta[leadId(l)] || {};
+    return `<div class="ld-crm"><select data-ldst="${i}" aria-label="สถานะ">${LD_STATUS.map((s) => `<option ${s === (m.status || "ใหม่") ? "selected" : ""}>${s}</option>`).join("")}</select>
+      <input type="date" data-ldfu="${i}" value="${esc(m.follow || "")}" aria-label="วันติดตาม" title="วันที่ต้องติดตาม">
+      <input data-ldnote="${i}" value="${esc(m.note || "")}" placeholder="โน้ต เช่น สนใจประกันสุขภาพ" aria-label="โน้ต"></div>`;
+  }
+  ["change"].forEach((ev) => $("#ld-list").addEventListener(ev, (e) => {
+    const t = e.target, list = $("#ld-list")._list || [];
+    if (t.dataset.ldst != null) saveMeta(list[+t.dataset.ldst], { status: t.value });
+    if (t.dataset.ldfu != null) saveMeta(list[+t.dataset.ldfu], { follow: t.value });
+    if (t.dataset.ldnote != null) saveMeta(list[+t.dataset.ldnote], { note: t.value.trim().slice(0, 200) });
+  }));
+
   // ---------------- boot ----------------
   fillPillars();
   $("#tt-date").value = bkkDate();
@@ -1740,6 +2039,15 @@ ${r.metrics.map((m) => `${m.name}: ${m.value} (เกณฑ์ ${m.target}) ส�
     }, () => {});
     db.collection(`data/users/${uid}/fhc/items`).orderBy("updatedAt", "desc").limit(100).onSnapshot((snap) => {
       fhcSaved = snap.docs.map((x) => Object.assign({ _id: x.id }, x.data())); renderSaved(); renderHome();
+    }, () => {});
+    db.collection(`data/users/${uid}/leadmeta/items`).onSnapshot((snap) => {
+      leadMeta = {}; snap.docs.forEach((x) => (leadMeta[x.id] = x.data())); if (leadsData) renderLeads();
+    }, () => {});
+    db.collection(`data/users/${uid}/icwrong/items`).orderBy("createdAt", "desc").limit(200).onSnapshot((snap) => {
+      icWrong = snap.docs.map((x) => Object.assign({ _id: x.id }, x.data())); if (!$("#p-ic").hidden) renderIC();
+    }, () => {});
+    db.collection(`data/users/${uid}/ic/items`).orderBy("createdAt", "desc").limit(100).onSnapshot((snap) => {
+      icAttempts = snap.docs.map((x) => x.data()); if (!$("#p-ic").hidden) renderIC();
     }, () => {});
     loadDay();
   })();

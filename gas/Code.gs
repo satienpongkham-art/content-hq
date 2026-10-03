@@ -272,7 +272,7 @@ function doPost(e) {
     if (req.action === 'ping') return json_({ ok: true });
     if (!checkPin_(req.pin)) return json_({ ok: false, error: 'bad_pin' });
     switch (req.action) {
-      case 'login': return json_({ ok: true, ai: !!prop_('ANTHROPIC_KEY') });
+      case 'login': try { ensureTriggers_(); } catch (err) { console.error(err); } return json_({ ok: true, ai: !!prop_('ANTHROPIC_KEY'), cost: usageMonth_() });
       case 'list': return json_({ ok: true, docs: storeList_(req.collection) });
       case 'get': return json_({ ok: true, doc: storeGet_(req.collection, req.id) });
       case 'set': storeSet_(req.collection, req.id, req.data); return json_({ ok: true });
@@ -390,35 +390,128 @@ function leadsMarkdown_() {
 }
 
 /* ---------- AI (Claude API ด้วยคีย์ของคุณเอง) ---------- */
-function claudeModel_() {
-  const fixed = prop_('CLAUDE_MODEL'); if (fixed) return fixed;
-  const c = CacheService.getScriptCache(), hit = c.get('claude_model'); if (hit) return hit;
+// ราคาโดยประมาณ (USD ต่อ 1 ล้าน token) ใช้คำนวณค่าใช้จ่ายคร่าว ๆ เท่านั้น
+const PRICE_ = { haiku: [1, 5], sonnet: [3, 15], opus: [5, 25] };
+const USD_THB = 33;
+function claudeModel_(tier) {
+  const fam = tier === 'fast' ? 'haiku' : 'sonnet';
+  const fixed = prop_(fam === 'haiku' ? 'CLAUDE_MODEL_FAST' : 'CLAUDE_MODEL'); if (fixed) return fixed;
+  const c = CacheService.getScriptCache(), hit = c.get('claude_model_' + fam); if (hit) return hit;
   const res = UrlFetchApp.fetch('https://api.anthropic.com/v1/models?limit=100', {
     muteHttpExceptions: true, headers: { 'x-api-key': prop_('ANTHROPIC_KEY'), 'anthropic-version': '2023-06-01' },
   });
   if (res.getResponseCode() !== 200) throw new Error('อ่านรายชื่อโมเดลไม่ได้ (' + res.getResponseCode() + ') ตรวจ ANTHROPIC_KEY');
-  const list = JSON.parse(res.getContentText()).data || [];
-  const pick = list.find((m) => /sonnet/i.test(m.id)) || list[0];
+  const list = JSON.parse(res.getContentText()).data || []; // เรียงจากใหม่ไปเก่า
+  const pick = list.find((m) => new RegExp(fam, 'i').test(m.id)) || list.find((m) => /sonnet/i.test(m.id)) || list[0];
   if (!pick) throw new Error('ไม่พบโมเดลที่ใช้ได้');
-  c.put('claude_model', pick.id, 21600);
+  c.put('claude_model_' + fam, pick.id, 21600);
   return pick.id;
+}
+function monthKey_() { return 'usage_' + Utilities.formatDate(new Date(), 'Asia/Bangkok', 'yyyy-MM'); }
+function usageMonth_() {
+  let u = {}; try { u = JSON.parse(prop_(monthKey_()) || '{}'); } catch (e) {}
+  return { usd: u.usd || 0, thb: Math.round((u.usd || 0) * USD_THB * 100) / 100, calls: u.calls || 0, searches: u.searches || 0 };
+}
+function addUsage_(model, usage) {
+  const fam = /haiku/i.test(model) ? 'haiku' : /opus/i.test(model) ? 'opus' : 'sonnet', pr = PRICE_[fam];
+  const inTok = (usage.input_tokens || 0) + (usage.cache_creation_input_tokens || 0) * 1.25 + (usage.cache_read_input_tokens || 0) * 0.1;
+  const searches = (usage.server_tool_use && usage.server_tool_use.web_search_requests) || 0;
+  const usd = inTok * pr[0] / 1e6 + (usage.output_tokens || 0) * pr[1] / 1e6 + searches * 0.01;
+  const lock = LockService.getScriptLock(); lock.waitLock(10000);
+  try {
+    let u = {}; try { u = JSON.parse(prop_(monthKey_()) || '{}'); } catch (e) {}
+    u.usd = (u.usd || 0) + usd; u.calls = (u.calls || 0) + 1; u.searches = (u.searches || 0) + searches;
+    PropertiesService.getScriptProperties().setProperty(monthKey_(), JSON.stringify(u));
+  } finally { lock.releaseLock(); }
 }
 function apiAi_(req) {
   const key = prop_('ANTHROPIC_KEY');
   if (!key) return { ok: false, error: 'ยังไม่ได้ตั้งค่า ANTHROPIC_KEY ใน Script Properties' };
-  const prompt = clip_(req.prompt, 60000);
+  let prompt = clip_(req.prompt, 60000);
   if (!prompt) return { ok: false, error: 'ไม่มีคำสั่ง' };
-  const model = claudeModel_();
-  const res = UrlFetchApp.fetch('https://api.anthropic.com/v1/messages', {
-    method: 'post', contentType: 'application/json', muteHttpExceptions: true,
-    headers: { 'x-api-key': key, 'anthropic-version': '2023-06-01' },
-    payload: JSON.stringify({ model: model, max_tokens: Math.min(Number(req.maxTokens) || 4000, 8000), messages: [{ role: 'user', content: prompt }] }),
-  });
-  const code = res.getResponseCode(), body = JSON.parse(res.getContentText() || '{}');
-  if (code !== 200) {
-    if (code === 404) CacheService.getScriptCache().remove('claude_model');
-    return { ok: false, error: 'Claude API ' + code + ': ' + ((body.error && body.error.message) || '').slice(0, 200) };
+  const model = claudeModel_(req.tier);
+  const tools = [];
+  if (req.search) tools.push({ type: 'web_search_20250305', name: 'web_search', max_uses: 3, user_location: { type: 'approximate', country: 'TH', timezone: 'Asia/Bangkok' } });
+  if (req.json) {
+    tools.push({ name: 'respond', description: 'ส่งคำตอบสุดท้าย เป็นข้อมูลตามรูปแบบ JSON ที่กำหนดในคำสั่ง ใส่ทุกฟิลด์ที่กำหนดไว้ที่ระดับบนสุดของ input', input_schema: { type: 'object', additionalProperties: true } });
+    prompt += req.search
+      ? '\n\nค้นเว็บเท่าที่จำเป็น (ไม่เกิน 3 ครั้ง) เพื่อยืนยันข้อมูลล่าสุด แล้วส่งคำตอบสุดท้ายด้วยเครื่องมือ respond เท่านั้น'
+      : '\n\nส่งคำตอบด้วยเครื่องมือ respond';
   }
-  const text = (body.content || []).filter((b) => b.type === 'text').map((b) => b.text).join('');
-  return { ok: true, text: text, model: model, usage: body.usage };
+  const body = { model: model, max_tokens: Math.min(Number(req.maxTokens) || 4000, 8000), messages: [{ role: 'user', content: prompt }] };
+  if (tools.length) body.tools = tools;
+  if (req.json && !req.search) body.tool_choice = { type: 'tool', name: 'respond' };
+  const sources = [], seen = {};
+  let out = null, text = '';
+  for (let turn = 0; turn < 4; turn++) {
+    const res = UrlFetchApp.fetch('https://api.anthropic.com/v1/messages', {
+      method: 'post', contentType: 'application/json', muteHttpExceptions: true,
+      headers: { 'x-api-key': key, 'anthropic-version': '2023-06-01' }, payload: JSON.stringify(body),
+    });
+    const code = res.getResponseCode(), r = JSON.parse(res.getContentText() || '{}');
+    if (code !== 200) {
+      if (code === 404) CacheService.getScriptCache().removeAll(['claude_model_haiku', 'claude_model_sonnet']);
+      const msg = (r.error && r.error.message) || '';
+      if (req.search && /web_search|web search/i.test(msg)) { // ถ้าองค์กรยังไม่เปิดค้นเว็บ ให้ลองใหม่แบบไม่ค้น
+        return apiAi_(Object.assign({}, req, { search: false, prompt: req.prompt + '\n(ค้นเว็บไม่ได้ในครั้งนี้ ให้ระบุใน sources_note ว่าต้องเช็กข้อมูลอะไร)' }));
+      }
+      return { ok: false, error: 'Claude API ' + code + ': ' + msg.slice(0, 200) };
+    }
+    if (r.usage) addUsage_(model, r.usage);
+    (r.content || []).forEach((b) => {
+      if (b.type === 'tool_use' && b.name === 'respond') out = b.input;
+      if (b.type === 'text') text += b.text;
+      if (b.type === 'web_search_tool_result' && Array.isArray(b.content)) b.content.forEach((x) => { if (x.url && !seen[x.url] && sources.length < 8) { seen[x.url] = 1; sources.push({ title: x.title || x.url, url: x.url }); } });
+    });
+    if (r.stop_reason === 'pause_turn') { body.messages = [body.messages[0], { role: 'assistant', content: r.content }]; continue; }
+    if (req.json && !out && turn === 0 && req.search && r.stop_reason !== 'max_tokens') { // ค้นเสร็จแต่ยังไม่ส่ง respond → บังคับส่ง
+      body.messages = [body.messages[0], { role: 'assistant', content: r.content }, { role: 'user', content: 'ส่งคำตอบสุดท้ายด้วยเครื่องมือ respond ตอนนี้เลย' }];
+      body.tool_choice = { type: 'tool', name: 'respond' };
+      continue;
+    }
+    break;
+  }
+  if (out && Object.keys(out).length === 1 && typeof out[Object.keys(out)[0]] === 'string') { // บางครั้งห่อ JSON เป็นข้อความ
+    try { const inner = JSON.parse(out[Object.keys(out)[0]]); if (inner && typeof inner === 'object') out = inner; } catch (e) {}
+  }
+  return { ok: true, text: out ? JSON.stringify(out) : text, model: model, sources: sources, cost: usageMonth_() };
+}
+
+/* ---------- LINE สรุปเช้า 08:00 ---------- */
+function ensureTriggers_() {
+  if (ScriptApp.getProjectTriggers().some((t) => t.getHandlerFunction() === 'morningBrief')) return;
+  ScriptApp.newTrigger('morningBrief').timeBased().atHour(8).nearMinute(0).everyDays(1).inTimezone('Asia/Bangkok').create();
+}
+function mondayOf_(iso) {
+  const d = new Date(iso + 'T12:00:00+07:00'), wd = (d.getUTCDay() + 6) % 7;
+  return Utilities.formatDate(new Date(d.getTime() - wd * 86400000), 'Asia/Bangkok', 'yyyy-MM-dd');
+}
+function morningBrief() {
+  const tz = 'Asia/Bangkok', now = new Date();
+  const today = Utilities.formatDate(now, tz, 'yyyy-MM-dd'), yest = Utilities.formatDate(new Date(now.getTime() - 86400000), tz, 'yyyy-MM-dd');
+  const thDay = ['อาทิตย์', 'จันทร์', 'อังคาร', 'พุธ', 'พฤหัสบดี', 'ศุกร์', 'เสาร์'][new Date(today + 'T12:00:00+07:00').getUTCDay()];
+  const L = ['☀️ สรุปเช้าวัน' + thDay + ' ' + today, ''];
+  let day = null, plan = null;
+  try { day = storeGet_('data/users/me/days/items', today); } catch (e) {}
+  try { plan = storeGet_('data/users/me/plans/items', mondayOf_(today)); } catch (e) {}
+  const pd = plan && Array.isArray(plan.days) ? plan.days.find((x) => x.date === today) : null;
+  L.push('🎬 TikTok: ' + ((day && day.tiktok && day.tiktok.title) || (pd && pd.tiktok && pd.tiktok.title) || 'ยังไม่มีหัวข้อ เปิด HQ กดสร้างสคริปต์'));
+  ['11:00', '17:00', '19:30'].forEach((t, i) => {
+    const sl = day && day.slots && day.slots['s' + (i + 1)];
+    const name = (sl && sl.output && sl.output.product) || (sl && sl.input && sl.input.name) || (pd && pd.sp && pd.sp[i] && pd.sp[i].product) || '-';
+    L.push('🛒 ' + t + ' ' + name + (sl && sl.posted ? ' ✅' : ''));
+  });
+  if (pd && pd.ic) L.push('📚 IC: ' + pd.ic);
+  const sh = leadSheet_(), n = sh.getLastRow() - 1;
+  const rows = n > 0 ? sh.getRange(2, 1, Math.min(n, 300), LEAD_HEADERS.length).getDisplayValues() : [];
+  const fresh = rows.filter((r) => r[0].indexOf(yest) === 0 || r[0].indexOf(today) === 0);
+  L.push('', '👥 Lead ใหม่ตั้งแต่เมื่อวาน: ' + fresh.length + ' คน');
+  fresh.slice(0, 5).forEach((r) => L.push('• ' + r[1] + ' ' + r[3] + '/100 ' + r[5] + (r[2] ? ' · ' + r[2] : '')));
+  let fu = [];
+  try { fu = storeList_('data/users/me/leadmeta/items').map((d) => d.data).filter((m) => m.follow && m.follow <= today && ['ปิดการขาย', 'ไม่สนใจ'].indexOf(m.status) < 0); } catch (e) {}
+  if (fu.length) { L.push('', '📞 ต้องติดตามวันนี้: ' + fu.length + ' คน'); fu.slice(0, 5).forEach((m) => L.push('• ' + (m.name || '-') + ' (' + (m.status || 'ใหม่') + ')' + (m.note ? ' — ' + m.note : ''))); }
+  let wrong = 0; try { wrong = storeList_('data/users/me/icwrong/items').length; } catch (e) {}
+  if (wrong) L.push('', '📝 ข้อสอบ IC ที่ต้องทบทวน: ' + wrong + ' ข้อ');
+  L.push('', 'เปิด HQ: https://satienpongkham-art.github.io/content-hq/hq/');
+  console.log(pushLine_(L.join('\n')));
 }
