@@ -1,11 +1,15 @@
 <!doctype html>
 <html lang="th">
 <head>
-<base target="_top">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>เช็กสุขภาพการเงินฟรี</title>
+<title>FHC · Financial Health Check</title>
 <meta name="description" content="เช็กสุขภาพการเงินฟรีใน 1 นาที ได้คะแนนเต็ม 100 พร้อมแผนดูแลการเงิน">
+<meta property="og:title" content="FHC · Financial Health Check">
+<meta property="og:description" content="เช็กสุขภาพการเงินฟรีใน 1 นาที ได้คะแนนเต็ม 100 พร้อมสิ่งที่ควรทำก่อน">
+<meta property="og:image" content="https://satienpongkham-art.github.io/content-hq/og.png">
+<meta property="og:url" content="https://satienpongkham-art.github.io/content-hq/">
+<meta name="twitter:card" content="summary_large_image">
 <meta name="theme-color" content="#fff4ee">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -166,6 +170,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .mini { border: 2px solid #c9f0da; background: #fff; border-radius: 99px; padding: 2px 12px; cursor: pointer; font-size: 13px; color: var(--ink); text-decoration: none; }
 .sent { text-align: center; color: #1d8a6c; font-weight: 600; background: var(--mint-soft); border-radius: 16px; padding: 12px; }
 .row-btns { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; }
+.brand { font-size: 13px; font-weight: 600; letter-spacing: .06em; color: var(--pink-deep); display: block; margin-bottom: 8px; }
 .foot { text-align: center; color: var(--muted); font-size: 12px; margin-top: 26px; display: grid; gap: 2px; }
 .toast { position: fixed; left: 50%; bottom: calc(22px + env(safe-area-inset-bottom, 0px)); transform: translate(-50%, 16px); opacity: 0; background: var(--ink); color: #fff; padding: 9px 18px; border-radius: 99px; font-size: 14px; transition: all .25s; pointer-events: none; z-index: 9; }
 .toast.show { opacity: 1; transform: translate(-50%, 0); }
@@ -175,6 +180,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
 <body>
 <div class="wrap">
   <header class="hdr">
+    <span class="brand">FHC · Financial Health Check</span>
     <span class="sticker">ฟรี · ใช้เวลาแค่ 1 นาที</span>
     <h1>เช็กสุขภาพ<span>การเงิน</span></h1>
     <p>รู้คะแนนการเงินเต็ม 100 และสิ่งที่ควรทำก่อน</p>
@@ -200,7 +206,8 @@ const ADVISOR = {
   "use strict";
   const $ = (s, r) => (r || document).querySelector(s);
   const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
-  const GAS = typeof google !== "undefined" && google.script && google.script.run;
+  const API = "https://script.google.com/macros/s/AKfycbxOSY_YQXOQ5crGogdm68_IdH-wnbw6AyX-fvTdbsAZI8bf0loixvYYk0mWztXpTodW/exec";
+  const GAS = !!API;
   const stage = $("#stage");
   let quickAnswers = {};
 
@@ -283,6 +290,7 @@ const ADVISOR = {
         <div id="send-sheet" ${GAS ? "" : "hidden"} style="display:grid;gap:10px">
           <label for="contact" style="font-weight:500">ช่องทางให้ติดต่อกลับ</label>
           <input class="txt" id="contact" placeholder="LINE ID หรือเบอร์โทร" autocomplete="tel">
+          <input type="text" id="hp" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0">
           <label class="wz-consent" for="send-ok"><input type="checkbox" id="send-ok"><span>ยินยอมส่งผลประเมินและช่องทางติดต่อนี้ให้ที่ปรึกษา เพื่อติดต่อกลับเรื่องการวางแผนการเงิน</span></label>
           <button type="button" class="btn-send" id="send-btn">ส่งให้ที่ปรึกษา</button>
           <p class="or">หรือ</p>
@@ -313,16 +321,28 @@ const ADVISOR = {
     if (!contact) { toast("ใส่ LINE ID หรือเบอร์โทรก่อนนะ"); $("#contact").focus(); return; }
     if (!ok) { toast("ติ๊กยินยอมก่อนส่งนะ"); return; }
     btn.disabled = true; btn.textContent = "กำลังส่ง…";
+    // ชื่อจุดอ่อนให้ตรงกับแดชบอร์ดใน HQ
+    const WEAK = { ef: "เงินสำรองฉุกเฉิน", dsr: "ภาระหนี้สูง", cons: "หนี้ดอกเบี้ยสูง", save: "การออม", da: "หนี้สินเกินทรัพย์สิน", life: "ประกันชีวิต", health: "ประกันสุขภาพ" };
+    const weak = r.metrics.filter((m) => m.status !== "good").map((m) => WEAK[m.id] || m.short);
+    if (r.totals && r.totals.cashflow < 0) weak.push("เงินเหลือน้อย");
     const payload = {
+      action: "lead", hp: $("#hp").value,
       name: inp.name || "", contact, consent: true, mode: inp.quick ? "ด่วน" : "ละเอียด",
-      score: r.score, level: r.level.t,
-      metrics: r.metrics.map((m) => ({ name: m.name, value: m.value, status: m.status })),
-      risks: r.risks, goal: inp.goal || "", input: inp,
+      score: r.score, goal: inp.goal || "",
+      income: inp.income ? FHC.fmt(inp.income) + " บาท" : "",
+      dependents: (inp.dependents || 0) + " คน",
+      incomeType: inp.freelance ? "ไม่แน่นอน/ฟรีแลนซ์" : "ประจำ",
+      weak,
     };
-    google.script.run
-      .withSuccessHandler(() => { $("#send-sheet").innerHTML = `<p class="sent">ส่งแล้ว ที่ปรึกษาจะติดต่อกลับเร็ว ๆ นี้</p>`; toast("ส่งเรียบร้อย"); })
-      .withFailureHandler(() => { btn.disabled = false; btn.textContent = "ส่งให้ที่ปรึกษา"; toast("ส่งไม่สำเร็จ ลองอีกครั้ง หรือส่งทาง LINE แทน"); })
-      .submitLead(payload);
+    const fail = (msg) => { btn.disabled = false; btn.textContent = "ส่งให้ที่ปรึกษา"; toast(msg || "ส่งไม่สำเร็จ ลองอีกครั้ง หรือส่งทาง LINE แทน"); };
+    fetch(API, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(payload) })
+      .then((res) => res.json())
+      .then((j) => {
+        if (!j.ok) return fail(j.error);
+        $("#send-sheet").innerHTML = `<p class="sent">ส่งแล้ว ที่ปรึกษาจะติดต่อกลับเร็ว ๆ นี้</p><p class="or">หรือ</p>`;
+        toast("ส่งเรียบร้อย");
+      })
+      .catch(() => fail());
   }
 
   intro();

@@ -1,62 +1,13 @@
 /**
- * ฟอร์มเช็กสุขภาพการเงิน: Google Apps Script Web App + Google Sheet
- * วิธีติดตั้ง: ดู README ส่วน "ตั้งค่าฟอร์มลูกค้าบน Google"
+ * Backend ของ FHC · Financial Health Check + Content HQ (เว็บอยู่บน GitHub Pages)
+ * Google Sheet = ฐานข้อมูล, Apps Script = API, LINE/อีเมล = แจ้งเตือน
  */
-const SHEET_NAME = 'Leads';
-const NOTIFY_EMAIL = true; // ส่งอีเมลแจ้งเจ้าของชีตเมื่อมีลูกค้าส่งผลเข้ามา
-const HEADERS = ['เวลา', 'ชื่อ', 'ช่องทางติดต่อ', 'คะแนน', 'ระดับ', 'โหมด',
-  'เงินสำรอง', 'DSR', 'หนี้บริโภค', 'การออม', 'หนี้/ทรัพย์สิน', 'ประกันชีวิต', 'สุขภาพ',
-  'จุดที่ควรดูแล', 'เป้าหมาย', 'ยินยอม', 'สถานะ', 'ข้อมูลดิบ (JSON)'];
-
+/** GET /exec → สถานะ API (หน้าเว็บจริงอยู่บน GitHub Pages) */
 function doGet() {
-  return HtmlService.createHtmlOutputFromFile('Index')
-    .setTitle('เช็กสุขภาพการเงินฟรี')
-    .addMetaTag('viewport', 'width=device-width, initial-scale=1')
-    .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
-}
-
-function sheet_() {
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
-  let sh = ss.getSheetByName(SHEET_NAME);
-  if (!sh) {
-    sh = ss.insertSheet(SHEET_NAME);
-    sh.appendRow(HEADERS);
-    sh.setFrozenRows(1);
-    sh.getRange(1, 1, 1, HEADERS.length).setFontWeight('bold').setBackground('#ffe4ec');
-  }
-  return sh;
+  return json_({ ok: true, service: 'FHC + Content HQ API', time: fmtTime_(new Date()) });
 }
 
 function clip_(v, n) { return String(v == null ? '' : v).slice(0, n || 500); }
-
-/** เรียกจากหน้าเว็บผ่าน google.script.run.submitLead(payload) */
-function submitLead(p) {
-  if (!p || p.consent !== true) throw new Error('ต้องได้รับความยินยอมก่อนบันทึก');
-  const contact = clip_(p.contact, 120).trim();
-  if (!contact) throw new Error('ไม่มีช่องทางติดต่อ');
-  const score = Math.max(0, Math.min(100, Number(p.score) || 0));
-  const m = Array.isArray(p.metrics) ? p.metrics : [];
-  const val = (i) => (m[i] ? clip_(m[i].value, 60) : '');
-  const lock = LockService.getScriptLock();
-  lock.waitLock(10000);
-  try {
-    sheet_().appendRow([
-      new Date(), clip_(p.name, 80), contact, score, clip_(p.level, 20), clip_(p.mode, 20),
-      val(0), val(1), val(2), val(3), val(4), val(5), val(6),
-      (Array.isArray(p.risks) ? p.risks : []).map((t) => clip_(t, 200)).join(' / '),
-      clip_(p.goal, 300), 'ยินยอม', 'ใหม่', clip_(JSON.stringify(p.input || {}), 4000),
-    ]);
-  } finally { lock.releaseLock(); }
-  if (NOTIFY_EMAIL) {
-    try {
-      const to = Session.getEffectiveUser().getEmail();
-      if (to) MailApp.sendEmail(to, 'มีลูกค้าส่งผลเช็กสุขภาพการเงิน: ' + clip_(p.name || contact, 60) + ' (' + score + '/100)',
-        'ชื่อ: ' + clip_(p.name, 80) + '\nติดต่อ: ' + contact + '\nคะแนน: ' + score + ' (' + clip_(p.level, 20) + ')\nจุดที่ควรดูแล:\n- ' +
-        (Array.isArray(p.risks) ? p.risks.map((t) => clip_(t, 200)).join('\n- ') : '') + '\n\nเปิดชีต: ' + SpreadsheetApp.getActiveSpreadsheet().getUrl());
-    } catch (e) { /* ไม่ให้การส่งอีเมลล้มทำให้ลูกค้าส่งไม่สำเร็จ */ }
-  }
-  return { ok: true };
-}
 
 /* =====================================================================
  * Google Form แบบมีคะแนน (Quiz) — รัน createFhcForm() ครั้งเดียว
@@ -149,7 +100,7 @@ const LEAD_SHEET = 'HQ_Leads';
 const LEAD_HEADERS = ['เวลา', 'ชื่อ', 'ติดต่อ', 'คะแนน', 'ระดับ', 'Lead', 'รายได้', 'คนที่ดูแล', 'ลักษณะรายได้', 'จุดที่ควรดูแล', 'ยินยอม'];
 const SHORT = [
   ['ถ้ารายได้หยุด', 'เงินสำรองฉุกเฉิน'], ['ค่าผ่อนหนี้', 'ภาระหนี้สูง'], ['มีหนี้บัตร', 'หนี้ดอกเบี้ยสูง'],
-  ['จ่ายค่ากินอยู่', 'เงินเหลือน้อย'], ['ออมหรือลงทุน', 'การออม'], ['ถ้าต้องนอนโรงพยาบาล', 'ประกันสุขภาพ'], ['ถ้าเกิดเรื่องไม่คาดฝัน', 'ประกันชีวิต'],
+  ['จ่ายค่ากินอยู่', 'เงินเหลือน้อย'], ['ออมหรือลงทุน', 'การออม'], ['ถ้าต้องนอนโรงพยาบาล', 'ประกันสุขภาพ'], ['ถ้าเกิดเรื่องไม่คาดฝัน', 'ประกันชีวิต'], ['(เว็บ) หนี้สินต่อทรัพย์สิน', 'หนี้สินเกินทรัพย์สิน'],
 ];
 const shortOf_ = (title) => { const m = SHORT.find((x) => title.indexOf(x[0]) === 0); return m ? m[1] : title; };
 const levelOf_ = (s) => (s >= 80 ? 'แข็งแรง' : s >= 60 ? 'พอใช้' : s >= 40 ? 'ต้องดูแล' : 'วิกฤต');
@@ -302,4 +253,172 @@ function setupDashboard() {
   SpreadsheetApp.getActiveSpreadsheet().addViewer(HQ_VIEWER);
   rebuildLeads();
   Logger.log('shared with ' + HQ_VIEWER);
+}
+
+/* =====================================================================
+ * API สำหรับเว็บบน GitHub Pages
+ *  - ฟอร์มสาธารณะ: POST {action:'lead', ...}  → บันทึก HQ_Leads + แจ้ง LINE + อีเมล
+ *  - Content HQ (ต้องมีรหัส HQ_PIN): store / leads / ai
+ * Script Properties ที่ต้องตั้งเอง: HQ_PIN, ANTHROPIC_KEY (ไม่บังคับ: CLAUDE_MODEL)
+ * ===================================================================== */
+function json_(o) { return ContentService.createTextOutput(JSON.stringify(o)).setMimeType(ContentService.MimeType.JSON); }
+const prop_ = (k) => PropertiesService.getScriptProperties().getProperty(k);
+
+function doPost(e) {
+  let req = {};
+  try { req = JSON.parse((e && e.postData && e.postData.contents) || '{}'); } catch (err) { return json_({ ok: false, error: 'bad_json' }); }
+  try {
+    if (req.action === 'lead') return json_(apiLead_(req));
+    if (req.action === 'ping') return json_({ ok: true });
+    if (!checkPin_(req.pin)) return json_({ ok: false, error: 'bad_pin' });
+    switch (req.action) {
+      case 'login': return json_({ ok: true, ai: !!prop_('ANTHROPIC_KEY') });
+      case 'list': return json_({ ok: true, docs: storeList_(req.collection) });
+      case 'get': return json_({ ok: true, doc: storeGet_(req.collection, req.id) });
+      case 'set': storeSet_(req.collection, req.id, req.data); return json_({ ok: true });
+      case 'add': return json_({ ok: true, id: storeSet_(req.collection, null, req.data) });
+      case 'del': storeDel_(req.collection, req.id); return json_({ ok: true });
+      case 'leads': return json_({ ok: true, text: leadsMarkdown_() });
+      case 'ai': return json_(apiAi_(req));
+      default: return json_({ ok: false, error: 'unknown_action' });
+    }
+  } catch (err) {
+    console.error(err);
+    return json_({ ok: false, error: String(err && err.message || err).slice(0, 300) });
+  }
+}
+
+/** รหัสผ่าน HQ + กันเดารหัส (ผิดเกิน 10 ครั้ง/15 นาที = ล็อก) */
+function checkPin_(pin) {
+  const real = prop_('HQ_PIN');
+  if (!real) throw new Error('ยังไม่ได้ตั้งค่า HQ_PIN ใน Script Properties');
+  const c = CacheService.getScriptCache(), fails = Number(c.get('pinfail') || 0);
+  if (fails >= 10) throw new Error('ใส่รหัสผิดหลายครั้ง รอ 15 นาทีแล้วลองใหม่');
+  if (String(pin || '') === real) return true;
+  c.put('pinfail', String(fails + 1), 900);
+  return false;
+}
+
+/** ฟอร์มสาธารณะส่งผลเข้ามา */
+function apiLead_(p) {
+  if (p.hp) return { ok: true }; // honeypot: บอทกรอกช่องซ่อน
+  if (p.consent !== true) return { ok: false, error: 'ต้องติ๊กยินยอมก่อนส่ง' };
+  const contact = clip_(p.contact, 120).trim();
+  if (!contact) return { ok: false, error: 'ไม่มีช่องทางติดต่อ' };
+  const c = CacheService.getScriptCache();
+  const minute = Number(c.get('lead_min') || 0), day = Number(c.get('lead_day') || 0);
+  if (minute >= 15 || day >= 300) return { ok: false, error: 'มีคนส่งเยอะเกินไป ลองใหม่อีกสักครู่ หรือส่งทาง LINE แทน' };
+  c.put('lead_min', String(minute + 1), 60); c.put('lead_day', String(day + 1), 86400);
+  const score = Math.max(0, Math.min(100, Math.round(Number(p.score) || 0)));
+  const x = {
+    time: new Date(), name: clip_(p.name, 60).trim() || 'ไม่ระบุชื่อ', contact, score, level: levelOf_(score),
+    lead: score < 60 ? 'Hot' : 'Warm',
+    income: clip_(p.income, 40), dependents: clip_(p.dependents, 20), incomeType: clip_(p.incomeType, 60),
+    weak: (Array.isArray(p.weak) ? p.weak : []).slice(0, 8).map((t) => clip_(t, 40)),
+    consent: 'ยินยอม (เว็บ' + (p.mode ? ' · ' + clip_(p.mode, 10) : '') + ')',
+  };
+  const lock = LockService.getScriptLock(); lock.waitLock(15000);
+  try { writeLead_(x); updateSummary_(); } finally { lock.releaseLock(); }
+  const text = lineText_(x) + (p.goal ? '\n🎯 เป้าหมาย: ' + clip_(p.goal, 200) : '');
+  try { console.log('LINE', pushLine_(text)); } catch (err) { console.error(err); }
+  try { MailApp.sendEmail(Session.getEffectiveUser().getEmail(), 'มีคนเช็กสุขภาพการเงิน (เว็บ): ' + x.name + ' (' + x.score + '/100) ' + x.lead, text); } catch (err) { console.error(err); }
+  return { ok: true };
+}
+
+/* ---------- ที่เก็บข้อมูล HQ (แท็บ HQ_Store: collection | id | json | updatedAt) ---------- */
+function storeSheet_() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  let sh = ss.getSheetByName('HQ_Store');
+  if (!sh) {
+    sh = ss.insertSheet('HQ_Store');
+    sh.getRange(1, 1, 1, 4).setValues([['collection', 'id', 'json', 'updatedAt']]).setFontWeight('bold');
+    sh.setFrozenRows(1); sh.getRange('A:D').setNumberFormat('@');
+  }
+  return sh;
+}
+function storeRows_() {
+  const sh = storeSheet_(), n = sh.getLastRow() - 1;
+  return n > 0 ? sh.getRange(2, 1, n, 3).getValues() : [];
+}
+function cleanCol_(col) {
+  const s = String(col || '');
+  if (!/^[\w\-\/]{1,200}$/.test(s)) throw new Error('bad collection');
+  return s;
+}
+function storeList_(col) {
+  col = cleanCol_(col);
+  return storeRows_().filter((r) => r[0] === col).map((r) => { try { return { id: String(r[1]), data: JSON.parse(r[2]) }; } catch (e) { return null; } }).filter(Boolean);
+}
+function storeGet_(col, id) {
+  col = cleanCol_(col);
+  const r = storeRows_().find((x) => x[0] === col && String(x[1]) === String(id));
+  return r ? JSON.parse(r[2]) : null;
+}
+function storeSet_(col, id, data) {
+  col = cleanCol_(col);
+  id = id ? clip_(id, 120) : Utilities.getUuid().replace(/-/g, '').slice(0, 20);
+  const body = JSON.stringify(data == null ? {} : data);
+  if (body.length > 45000) throw new Error('ข้อมูลใหญ่เกินไป');
+  const lock = LockService.getScriptLock(); lock.waitLock(15000);
+  try {
+    const sh = storeSheet_(), rows = storeRows_();
+    const i = rows.findIndex((x) => x[0] === col && String(x[1]) === id);
+    const row = [col, id, body, fmtTime_(new Date())];
+    if (i >= 0) sh.getRange(i + 2, 1, 1, 4).setValues([row]); else sh.appendRow(row);
+  } finally { lock.releaseLock(); }
+  return id;
+}
+function storeDel_(col, id) {
+  col = cleanCol_(col);
+  const lock = LockService.getScriptLock(); lock.waitLock(15000);
+  try {
+    const rows = storeRows_(), i = rows.findIndex((x) => x[0] === col && String(x[1]) === String(id));
+    if (i >= 0) storeSheet_().deleteRow(i + 2);
+  } finally { lock.releaseLock(); }
+}
+
+/** ข้อมูล Lead ในรูปแบบตารางเดียวกับที่ HQ บน claude.ai อ่าน */
+function leadsMarkdown_() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const md = (name) => {
+    const sh = ss.getSheetByName(name); if (!sh || sh.getLastRow() < 1) return '';
+    const v = sh.getRange(1, 1, Math.min(sh.getLastRow(), 501), sh.getLastColumn()).getDisplayValues();
+    const line = (r) => '| ' + r.map((c) => String(c).replace(/\|/g, '/').replace(/\n/g, ' ')).join(' | ') + ' |';
+    return '### Sheet Name: ' + name + '\n' + line(v[0]) + '\n|' + v[0].map(() => '---|').join('') + '\n' + v.slice(1).map(line).join('\n') + '\n';
+  };
+  return md('HQ_Summary') + '\n' + md('HQ_Leads');
+}
+
+/* ---------- AI (Claude API ด้วยคีย์ของคุณเอง) ---------- */
+function claudeModel_() {
+  const fixed = prop_('CLAUDE_MODEL'); if (fixed) return fixed;
+  const c = CacheService.getScriptCache(), hit = c.get('claude_model'); if (hit) return hit;
+  const res = UrlFetchApp.fetch('https://api.anthropic.com/v1/models?limit=100', {
+    muteHttpExceptions: true, headers: { 'x-api-key': prop_('ANTHROPIC_KEY'), 'anthropic-version': '2023-06-01' },
+  });
+  if (res.getResponseCode() !== 200) throw new Error('อ่านรายชื่อโมเดลไม่ได้ (' + res.getResponseCode() + ') ตรวจ ANTHROPIC_KEY');
+  const list = JSON.parse(res.getContentText()).data || [];
+  const pick = list.find((m) => /sonnet/i.test(m.id)) || list[0];
+  if (!pick) throw new Error('ไม่พบโมเดลที่ใช้ได้');
+  c.put('claude_model', pick.id, 21600);
+  return pick.id;
+}
+function apiAi_(req) {
+  const key = prop_('ANTHROPIC_KEY');
+  if (!key) return { ok: false, error: 'ยังไม่ได้ตั้งค่า ANTHROPIC_KEY ใน Script Properties' };
+  const prompt = clip_(req.prompt, 60000);
+  if (!prompt) return { ok: false, error: 'ไม่มีคำสั่ง' };
+  const model = claudeModel_();
+  const res = UrlFetchApp.fetch('https://api.anthropic.com/v1/messages', {
+    method: 'post', contentType: 'application/json', muteHttpExceptions: true,
+    headers: { 'x-api-key': key, 'anthropic-version': '2023-06-01' },
+    payload: JSON.stringify({ model: model, max_tokens: Math.min(Number(req.maxTokens) || 4000, 8000), messages: [{ role: 'user', content: prompt }] }),
+  });
+  const code = res.getResponseCode(), body = JSON.parse(res.getContentText() || '{}');
+  if (code !== 200) {
+    if (code === 404) CacheService.getScriptCache().remove('claude_model');
+    return { ok: false, error: 'Claude API ' + code + ': ' + ((body.error && body.error.message) || '').slice(0, 200) };
+  }
+  const text = (body.content || []).filter((b) => b.type === 'text').map((b) => b.text).join('');
+  return { ok: true, text: text, model: model, usage: body.usage };
 }

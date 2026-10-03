@@ -178,6 +178,7 @@
 </div>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
+<!--@SHIM@-->
 <script>
 /*@FHC_CORE@*/
 </script>
@@ -188,7 +189,8 @@
   const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 
   // ---------------- constants ----------------
-  let FORM_URL = "";
+  const DEFAULT_FORM = "https://satienpongkham-art.github.io/content-hq/";
+  let FORM_URL = DEFAULT_FORM;
   const INVITE = () => `สวัสดีครับ 😊 ลองเช็กสุขภาพการเงินฟรีดูนะครับ แค่กดเลือกคำตอบ 12 ข้อ ใช้เวลา 1 นาที ได้คะแนนเต็ม 100 พร้อมสิ่งที่ควรทำก่อน แล้วกดส่งผลกลับมาให้ผมช่วยดูต่อได้เลยครับ\n${FORM_URL}`;
   const PILLARS = [
     { t: "Myth Busting / Q&A / ไลฟ์สไตล์", ex: "ความเชื่อผิด ๆ เรื่องเงิน, ตอบคอมเมนต์" },
@@ -769,7 +771,7 @@ ${r.metrics.map((m) => `${m.name}: ${m.value} (เกณฑ์ ${m.target}) ส�
   $("#sp-all").addEventListener("click", async () => { for (const s of SLOTS) await genSlot(s); });
   renderSlotsShell();
   renderTikTok(); SLOTS.forEach((s) => renderSlot(s.id));
-  mountFHC(); renderHome(); setFormUrl("");
+  mountFHC(); renderHome(); setFormUrl(DEFAULT_FORM);
   setInterval(renderHome, 30000);
   try { const t = localStorage.getItem("hq-tab"); if (t && tabs.includes(t)) selectTab(t); } catch (e) {}
 

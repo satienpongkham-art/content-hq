@@ -1,0 +1,1747 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<meta name="theme-color" content="#0b1030">
+<title>Content HQ การเงิน</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Prompt:wght@400;500;600;700&family=Sarabun:wght@400;500;600&display=swap">
+<style>
+/* Layout: sticky glass top bar → tab panels in a 1120px column. Overview = bento grid of glass tiles;
+   Today = vertical timeline (ทั้งวัน → 11:00 → 17:00 → 19:30). Deliberately single dark "glass over aurora" look. */
+:root {
+  --bg0: #070b18;
+  --bg1: #0d1330;
+  --glass: rgba(255, 255, 255, 0.055);
+  --glass-hi: rgba(255, 255, 255, 0.09);
+  --glass-in: rgba(5, 9, 24, 0.45);
+  --stroke: rgba(255, 255, 255, 0.11);
+  --stroke-hi: rgba(255, 255, 255, 0.22);
+  --fg: #eef1fb;
+  --muted: #9ba5c6;
+  --faint: #67719a;
+  --accent: #8fa3ff;
+  --accent-2: #c095ff;
+  --on-accent: #0a0f24;
+  --mint: #62e2c6;
+  --amber: #ffc76e;
+  --rose: #ff8d9d;
+  --good: #62e2c6; --good-soft: rgba(98, 226, 198, 0.14);
+  --warn: #ffc76e; --warn-soft: rgba(255, 199, 110, 0.14);
+  --bad: #ff8d9d;  --bad-soft: rgba(255, 141, 157, 0.14);
+  --font-display: "Prompt", "Sarabun", system-ui, sans-serif;
+  --font-body: "Sarabun", "Prompt", system-ui, sans-serif;
+  --font-data: "Prompt", "Sarabun", system-ui, sans-serif;
+  --r: 18px;
+  --r-sm: 11px;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { min-height: 100%; }
+body {
+  background: var(--bg0);
+  background-image:
+    radial-gradient(60vw 50vh at 8% -5%, rgba(108, 99, 255, 0.32), transparent 60%),
+    radial-gradient(50vw 45vh at 100% 10%, rgba(192, 149, 255, 0.20), transparent 60%),
+    radial-gradient(70vw 60vh at 60% 110%, rgba(40, 190, 170, 0.18), transparent 60%),
+    linear-gradient(180deg, var(--bg1), var(--bg0) 70%);
+  background-attachment: fixed;
+  color: var(--fg); font-family: var(--font-body); font-size: 16px; line-height: 1.65; font-variant-numeric: tabular-nums;
+  -webkit-font-smoothing: antialiased;
+}
+h1, h2, h3, h4 { font-family: var(--font-display); line-height: 1.25; text-wrap: balance; margin: 0; letter-spacing: -0.005em; }
+p { margin: 0; }
+button, input, select, textarea { font: inherit; color: inherit; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+::selection { background: rgba(143, 163, 255, 0.35); }
+.num { font-family: var(--font-data); font-variant-numeric: tabular-nums; }
+
+/* ---------- glass primitives ---------- */
+.glass {
+  background: var(--glass);
+  border: 1px solid var(--stroke);
+  border-radius: var(--r);
+  backdrop-filter: blur(18px) saturate(140%);
+  -webkit-backdrop-filter: blur(18px) saturate(140%);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.06) inset, 0 20px 40px -24px rgba(0, 0, 0, 0.6);
+}
+.btn, .btn-ghost, .chip-btn {
+  font-family: var(--font-display);
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  border-radius: 999px; padding: 9px 18px; cursor: pointer; font-weight: 500; border: 1px solid transparent;
+  transition: transform .15s ease, background .2s ease, border-color .2s ease, box-shadow .2s ease;
+  white-space: nowrap;
+}
+.btn { background: linear-gradient(135deg, var(--accent), var(--accent-2)); color: var(--on-accent); box-shadow: 0 8px 24px -10px rgba(143, 163, 255, 0.8); }
+.btn:hover { transform: translateY(-1px); box-shadow: 0 12px 28px -10px rgba(170, 150, 255, 0.9); }
+.btn-ghost { background: var(--glass-hi); border-color: var(--stroke); color: var(--fg); }
+.btn-ghost:hover { border-color: var(--stroke-hi); background: rgba(255, 255, 255, 0.13); }
+.chip-btn { padding: 5px 12px; font-size: 13px; background: transparent; border-color: var(--stroke); color: var(--muted); }
+.chip-btn:hover { color: var(--fg); border-color: var(--accent); }
+button:disabled { opacity: .5; cursor: progress; transform: none !important; }
+.pill { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; padding: 2px 10px; border-radius: 999px; font-weight: 500; white-space: nowrap; }
+.pill::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+.pill.acc { background: rgba(143, 163, 255, 0.15); color: var(--accent); }
+.pill.good { background: var(--good-soft); color: var(--good); }
+.pill.warn { background: var(--warn-soft); color: var(--warn); }
+.pill.mute { background: rgba(255, 255, 255, 0.07); color: var(--muted); }
+.pill.plain::before { display: none; }
+.eyebrow { font-family: var(--font-display); font-size: 13px; letter-spacing: 0.02em; color: var(--muted); font-weight: 500; }
+.note { color: var(--muted); font-size: 13px; }
+.err { color: var(--bad); font-size: 14px; }
+
+/* ---------- top bar ---------- */
+.topbar {
+  position: sticky; top: env(safe-area-inset-top, 0px); z-index: 20;
+  background: rgba(8, 12, 28, 0.62); border-bottom: 1px solid var(--stroke);
+  backdrop-filter: blur(20px) saturate(150%); -webkit-backdrop-filter: blur(20px) saturate(150%);
+}
+.topbar-in { max-width: 1120px; margin: 0 auto; padding: 12px 16px; display: flex; flex-wrap: wrap; align-items: center; gap: 12px 20px; }
+.brand { display: flex; align-items: center; gap: 10px; margin-right: auto; }
+.mark { width: 34px; height: 34px; border-radius: 10px; display: grid; place-items: center; font-family: var(--font-display); font-weight: 700; font-size: 13px; color: var(--on-accent); background: linear-gradient(135deg, var(--accent), var(--accent-2) 60%, var(--mint)); box-shadow: 0 6px 20px -8px rgba(143, 163, 255, .9); }
+.brand h1 { font-size: 17px; font-weight: 600; font-family: var(--font-display); }
+.brand p { font-size: 12px; color: var(--muted); }
+.tabs { display: flex; gap: 4px; padding: 4px; border-radius: 999px; background: var(--glass); border: 1px solid var(--stroke); overflow-x: auto; max-width: 100%; scrollbar-width: none; }
+.tab { font-family: var(--font-display); background: none; border: 0; padding: 7px 16px; cursor: pointer; color: var(--muted); border-radius: 999px; white-space: nowrap; font-weight: 500; font-size: 14px; transition: background .2s, color .2s; }
+.tab:hover { color: var(--fg); }
+.tab[aria-selected="true"] { color: var(--on-accent); background: linear-gradient(135deg, var(--accent), var(--accent-2)); }
+@media (max-width: 640px) { .brand p { display: none; } .tabs { width: 100%; } }
+
+.wrap { max-width: 1120px; margin: 0 auto; padding-inline: 16px; padding-block: 24px 80px; }
+.banner { border-radius: var(--r-sm); padding: 10px 14px; font-size: 14px; margin-bottom: 18px; background: var(--warn-soft); border: 1px solid rgba(255, 199, 110, .3); }
+.panel-head { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: 10px 16px; margin-bottom: 18px; }
+.panel-head h2 { font-size: 28px; font-weight: 600; letter-spacing: -0.01em; }
+.panel-head p { color: var(--muted); font-size: 14px; }
+
+/* ---------- overview bento ---------- */
+.bento { display: grid; gap: 16px; grid-template-columns: repeat(12, 1fr); }
+.tile { padding: 20px; min-width: 0; display: grid; gap: 12px; align-content: start; }
+.t-hero { grid-column: span 8; padding: 26px; gap: 18px; position: relative; overflow: hidden; }
+.t-hero::after { content: ""; position: absolute; right: -60px; top: -60px; width: 240px; height: 240px; border-radius: 50%; background: radial-gradient(circle, rgba(192, 149, 255, .35), transparent 65%); pointer-events: none; }
+.t-ring { grid-column: span 4; }
+.t-week { grid-column: span 7; }
+.t-stats { grid-column: span 5; }
+.t-link { grid-column: span 7; }
+.t-fhc { grid-column: span 5; }
+@media (max-width: 900px) { .t-hero, .t-ring, .t-week, .t-stats, .t-link, .t-fhc { grid-column: 1 / -1; } }
+.hello { font-size: clamp(26px, 4vw, 36px); font-weight: 600; }
+.hello em { font-style: normal; background: linear-gradient(90deg, var(--accent), var(--accent-2), var(--mint)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.next { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px; padding: 14px 16px; border-radius: var(--r-sm); background: var(--glass-in); border: 1px solid var(--stroke); }
+.next .time { font-family: var(--font-data); font-size: 26px; font-weight: 500; }
+.next .cd { color: var(--mint); font-family: var(--font-data); font-size: 14px; }
+.quick { display: flex; flex-wrap: wrap; gap: 10px; position: relative; z-index: 1; }
+.ring { display: flex; align-items: center; gap: 18px; }
+.ring svg { width: 112px; height: 112px; flex: none; transform: rotate(-90deg); }
+.ring .track { stroke: rgba(255, 255, 255, .08); }
+.ring .bar { stroke: url(#ringGrad); transition: stroke-dashoffset .8s cubic-bezier(.2, .7, .2, 1); }
+.ring-num { font-family: var(--font-data); font-size: 34px; line-height: 1; }
+.ring-num small { font-size: 15px; color: var(--muted); }
+.checks { display: grid; gap: 6px; font-size: 14px; }
+.checks li { list-style: none; display: flex; gap: 8px; align-items: center; color: var(--muted); }
+.checks li.done { color: var(--fg); }
+.checks li::before { content: ""; width: 16px; height: 16px; border-radius: 5px; border: 1.5px solid var(--stroke-hi); flex: none; }
+.checks li.done::before { background: var(--mint); border-color: var(--mint); box-shadow: inset 0 0 0 3px var(--bg1); }
+.checks { margin: 0; padding: 0; }
+.week-chart svg { width: 100%; height: auto; display: block; }
+.week-chart .lbl { fill: var(--muted); font-size: 11px; font-family: var(--font-body); }
+.week-chart .val { fill: var(--fg); font-size: 11px; font-family: var(--font-data); }
+.week-chart .grid { stroke: rgba(255, 255, 255, .07); }
+.stat-row { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+.stat { padding: 12px 14px; border-radius: var(--r-sm); background: var(--glass-in); border: 1px solid var(--stroke); }
+.stat b { display: block; font-family: var(--font-data); font-size: 26px; font-weight: 500; line-height: 1.2; }
+.stat span { font-size: 13px; color: var(--muted); }
+.link-box { display: flex; gap: 18px; align-items: center; flex-wrap: wrap; }
+.qr { width: 132px; height: 132px; padding: 10px; border-radius: 14px; background: #fff; flex: none; display: grid; place-items: center; }
+.qr img, .qr canvas { width: 112px !important; height: 112px !important; }
+.link-txt { display: grid; gap: 10px; min-width: 0; flex: 1 1 240px; }
+.url { font-family: var(--font-data); font-size: 13px; padding: 9px 12px; border-radius: var(--r-sm); background: var(--glass-in); border: 1px solid var(--stroke); word-break: break-all; }
+
+/* ---------- today timeline ---------- */
+.ctl-row { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); align-items: end; }
+.ctl { display: grid; gap: 5px; font-size: 13px; min-width: 0; }
+.ctl > span { color: var(--muted); }
+.ctl input, .ctl select, .ctl textarea, .fhc-field input, .fhc-field select, .fhc-field textarea {
+  width: 100%; padding: 10px 12px; border: 1px solid var(--stroke); border-radius: var(--r-sm);
+  background: var(--glass-in); color: var(--fg); transition: border-color .2s, box-shadow .2s;
+}
+.ctl input::placeholder, .fhc-field input::placeholder, .fhc-field textarea::placeholder { color: var(--faint); }
+.ctl input:focus, .ctl select:focus, .ctl textarea:focus, .fhc-field input:focus, .fhc-field select:focus, .fhc-field textarea:focus { border-color: var(--accent); outline: none; box-shadow: 0 0 0 3px rgba(143, 163, 255, .2); }
+select option { background: var(--bg1); color: var(--fg); }
+.timeline { display: grid; gap: 18px; position: relative; padding-left: 74px; }
+.timeline::before { content: ""; position: absolute; left: 30px; top: 18px; bottom: 18px; width: 2px; background: linear-gradient(var(--accent), var(--accent-2), var(--mint)); opacity: .35; border-radius: 2px; }
+@media (max-width: 640px) { .timeline { padding-left: 0; } .timeline::before { display: none; } }
+.tl { position: relative; padding: 0; }
+.tl-dot { position: absolute; left: -74px; top: 16px; width: 62px; text-align: center; font-family: var(--font-data); font-size: 13px; color: var(--muted); }
+.tl-dot span { background: var(--bg1); padding: 0 4px; border-radius: 6px; position: relative; z-index: 1; }
+.tl-dot::after { content: ""; display: block; width: 12px; height: 12px; border-radius: 50%; margin: 6px auto 0; background: var(--bg0); border: 2px solid var(--accent); }
+.tl.done .tl-dot span { background: var(--bg1); padding: 0 4px; border-radius: 6px; position: relative; z-index: 1; }
+.tl-dot::after { background: var(--mint); border-color: var(--mint); box-shadow: 0 0 12px var(--mint); }
+@media (max-width: 640px) { .tl-dot { display: none; } }
+.tl-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 10px; padding: 16px 20px; border-bottom: 1px solid var(--stroke); }
+.tl-head h3 { font-size: 18px; font-weight: 600; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.tl-head .t { font-family: var(--font-data); color: var(--accent); font-weight: 500; }
+.tl-body { padding: 18px 20px 20px; display: grid; gap: 16px; }
+.toggle { display: inline-flex; gap: 8px; align-items: center; font-size: 14px; cursor: pointer; user-select: none; }
+.toggle input { appearance: none; width: 38px; height: 22px; border-radius: 999px; background: rgba(255, 255, 255, .12); position: relative; cursor: pointer; transition: background .2s; margin: 0; }
+.toggle input::after { content: ""; position: absolute; top: 3px; left: 3px; width: 16px; height: 16px; border-radius: 50%; background: #fff; transition: transform .2s; }
+.toggle input:checked { background: var(--mint); }
+.toggle input:checked::after { transform: translateX(16px); }
+.out { display: grid; gap: 14px; min-width: 0; }
+.out.empty { color: var(--muted); font-size: 14px; padding: 16px; border: 1px dashed var(--stroke-hi); border-radius: var(--r-sm); text-align: center; }
+.out h3 { font-size: 20px; }
+.kv { display: grid; grid-template-columns: 120px 1fr; gap: 8px 16px; font-size: 14px; margin: 0; }
+.kv dt { color: var(--muted); } .kv dd { margin: 0; min-width: 0; }
+@media (max-width: 520px) { .kv { grid-template-columns: 1fr; gap: 2px; } .kv dd { margin-bottom: 8px; } }
+.hooks { margin: 0; padding-left: 20px; display: grid; gap: 4px; }
+.scenes { display: grid; border: 1px solid var(--stroke); border-radius: var(--r-sm); overflow: hidden; }
+.scene { display: grid; grid-template-columns: 56px 1fr; gap: 12px; padding: 12px 14px; border-bottom: 1px solid var(--stroke); }
+.scene:nth-child(odd) { background: rgba(255, 255, 255, .025); }
+.scene:last-child { border-bottom: 0; }
+.scene .no { font-family: var(--font-data); color: var(--accent); font-size: 12px; padding-top: 3px; }
+.scene .line { font-weight: 500; }
+.scene .meta { color: var(--muted); font-size: 13px; }
+.copyblock { background: var(--glass-in); border: 1px solid var(--stroke); border-radius: var(--r-sm); padding: 12px 14px; white-space: pre-wrap; word-break: break-word; font-size: 14px; }
+.copyblock .lbl { display: flex; justify-content: space-between; align-items: center; gap: 8px; font-size: 12px; color: var(--muted); margin-bottom: 8px; white-space: normal; }
+.mini { font-size: 12px; padding: 4px 12px; border-radius: 999px; border: 1px solid var(--stroke); background: var(--glass-hi); cursor: pointer; color: var(--fg); transition: border-color .2s; }
+.mini:hover { border-color: var(--accent); }
+.row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.refine { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; padding-top: 12px; border-top: 1px solid var(--stroke); }
+.refine span { font-size: 13px; color: var(--muted); margin-right: 4px; }
+.versions { display: grid; gap: 10px; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
+.gen { display: grid; gap: 10px; padding: 18px; border-radius: var(--r-sm); background: var(--glass-in); border: 1px solid var(--stroke); }
+.gen-top { display: flex; justify-content: space-between; gap: 10px; font-size: 14px; color: var(--muted); }
+.gen-bar { height: 4px; border-radius: 4px; background: rgba(255, 255, 255, .07); overflow: hidden; }
+.gen-bar i { display: block; height: 100%; width: 40%; border-radius: 4px; background: linear-gradient(90deg, var(--accent), var(--accent-2), var(--mint)); animation: slide 1.4s ease-in-out infinite; }
+@keyframes slide { 0% { transform: translateX(-100%); } 100% { transform: translateX(260%); } }
+.gen-tail { font-family: var(--font-data); font-size: 12px; color: var(--faint); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; direction: rtl; text-align: left; }
+
+/* ---------- library ---------- */
+.list { display: grid; overflow: hidden; padding: 0; }
+.item { display: grid; grid-template-columns: 100px 84px 1fr auto; gap: 12px; padding: 12px 18px; border-bottom: 1px solid var(--stroke); align-items: center; font-size: 14px; }
+.item:last-child { border-bottom: 0; }
+.item .d { font-family: var(--font-data); color: var(--muted); font-size: 13px; }
+.item .t { min-width: 0; } .item .t small { display: block; color: var(--muted); }
+@media (max-width: 600px) { .item { grid-template-columns: 1fr auto; } .item .d, .item .k { grid-column: 1 / -1; } }
+.empty-row { padding: 22px 18px; color: var(--muted); font-size: 14px; text-align: center; }
+
+/* ---------- toast ---------- */
+.toast { position: fixed; left: 50%; bottom: calc(24px + env(safe-area-inset-bottom, 0px)); transform: translate(-50%, 20px); opacity: 0; z-index: 50; padding: 10px 18px; border-radius: 999px; background: rgba(20, 26, 52, .92); border: 1px solid var(--stroke-hi); font-size: 14px; transition: opacity .25s, transform .25s; pointer-events: none; backdrop-filter: blur(12px); }
+.toast.show { opacity: 1; transform: translate(-50%, 0); }
+
+/* ---------- FHC (owner form, restyled) ---------- */
+.fhc-form { display: grid; gap: 16px; }
+.fhc-set { background: var(--glass); border: 1px solid var(--stroke); border-radius: var(--r); padding: 16px 20px 20px; margin: 0; min-width: 0; backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px); }
+.fhc-set legend { font-family: var(--font-display); font-weight: 600; padding: 0 8px; font-size: 15px; }
+.fhc-grid { display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); align-items: start; }
+.fhc-field { display: grid; gap: 5px; font-size: 13px; min-width: 0; }
+.fhc-field > span { color: var(--muted); }
+.fhc-field input { font-family: var(--font-data); }
+.fhc-field input[type="text"]:not([data-num]) { font-family: var(--font-body); }
+.fhc-hint { color: var(--faint); font-size: 12px; }
+.fhc-check, .fhc-consent { display: flex; gap: 10px; align-items: flex-start; font-size: 14px; }
+.fhc-check { padding-top: 26px; }
+.fhc-check input, .fhc-consent input { width: 18px; height: 18px; margin-top: 3px; accent-color: var(--accent); flex: none; }
+.fhc-debts { display: grid; gap: 10px; margin-bottom: 12px; }
+.fhc-debt { display: grid; gap: 10px; grid-template-columns: 1.4fr 1fr 1fr .8fr auto; align-items: end; padding-bottom: 12px; border-bottom: 1px dashed var(--stroke); }
+@media (max-width: 640px) { .fhc-debt { grid-template-columns: 1fr 1fr; } }
+.fhc-x { width: 38px; height: 42px; border: 1px solid var(--stroke); background: transparent; border-radius: var(--r-sm); cursor: pointer; color: var(--muted); font-size: 18px; }
+.fhc-x:hover { color: var(--bad); border-color: var(--bad); }
+.fhc-actions { display: flex; flex-wrap: wrap; gap: 10px; }
+.fhc-btn, .fhc-btn-ghost { border-radius: 999px; padding: 9px 18px; cursor: pointer; font-weight: 500; border: 1px solid transparent; }
+.fhc-btn { background: linear-gradient(135deg, var(--accent), var(--accent-2)); color: var(--on-accent); }
+.fhc-btn-ghost { background: var(--glass-hi); border-color: var(--stroke); color: var(--fg); }
+.fhc-btn-ghost:hover { border-color: var(--stroke-hi); }
+.fhc-err { color: var(--bad); font-size: 14px; }
+.fhc-result { display: grid; gap: 18px; margin-top: 24px; padding: 24px; border-radius: var(--r); background: var(--glass); border: 1px solid var(--stroke); }
+.fhc-top { display: grid; grid-template-columns: 1fr minmax(240px, 340px); gap: 20px; align-items: center; }
+@media (max-width: 760px) { .fhc-top { grid-template-columns: 1fr; } }
+.fhc-score { display: flex; gap: 20px; align-items: center; flex-wrap: wrap; }
+.fhc-gauge { --c: var(--accent); width: 128px; height: 128px; border-radius: 50%; display: grid; place-items: center; flex: none; background: conic-gradient(var(--c) calc(var(--p) * 1%), rgba(255, 255, 255, .08) 0); box-shadow: 0 0 40px -10px var(--c); }
+.fhc-gauge > div { width: 102px; height: 102px; border-radius: 50%; background: var(--bg1); display: grid; place-items: center; align-content: center; line-height: 1; }
+.fhc-gauge b { font-family: var(--font-data); font-size: 34px; font-weight: 500; }
+.fhc-gauge span { color: var(--muted); font-size: 12px; }
+.fhc-lv-good .fhc-gauge { --c: var(--good); } .fhc-lv-ok .fhc-gauge { --c: var(--accent); }
+.fhc-lv-warn .fhc-gauge { --c: var(--warn); } .fhc-lv-bad .fhc-gauge { --c: var(--bad); }
+.fhc-score-txt { display: grid; gap: 4px; min-width: 0; flex: 1 1 220px; }
+.fhc-score-txt h3 { font-size: 22px; }
+.fhc-eyebrow { color: var(--muted); font-size: 13px; }
+.fhc-num { font-family: var(--font-data); font-variant-numeric: tabular-nums; font-weight: 500; }
+.fhc-radar { color: var(--accent); }
+.fhc-radar polygon:not(:last-of-type), .fhc-radar line { stroke: #ffffff; }
+.fhc-radar polygon:last-of-type { fill: var(--accent-2); stroke: var(--accent); }
+.fhc-radar circle { fill: var(--mint); }
+.fhc-radar text { fill: var(--muted); font-family: var(--font-body); }
+.fhc-table-wrap { overflow-x: auto; border: 1px solid var(--stroke); border-radius: var(--r-sm); }
+.fhc-table { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 580px; }
+.fhc-table th { text-align: left; font-weight: 500; color: var(--muted); padding: 10px 14px; border-bottom: 1px solid var(--stroke); font-size: 12px; letter-spacing: .04em; }
+.fhc-table td { padding: 11px 14px; border-bottom: 1px solid var(--stroke); vertical-align: top; }
+.fhc-table tr:last-child td { border-bottom: 0; }
+.fhc-table td small { display: block; color: var(--faint); font-size: 12px; margin-top: 2px; }
+.fhc-pill { display: inline-block; font-size: 11px; padding: 1px 8px; border-radius: 999px; font-weight: 500; margin-right: 4px; }
+.fhc-good { background: var(--good-soft); color: var(--good); } .fhc-warn { background: var(--warn-soft); color: var(--warn); } .fhc-bad { background: var(--bad-soft); color: var(--bad); }
+.fhc-block h4, .fhc-plan h4 { font-size: 15px; margin-bottom: 8px; }
+.fhc-block ol, .fhc-plan ul { margin: 0; padding-left: 20px; display: grid; gap: 5px; }
+.fhc-plan { display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
+.fhc-plan > div { background: var(--glass-in); border: 1px solid var(--stroke); border-radius: var(--r-sm); padding: 14px 16px; min-width: 0; font-size: 14px; }
+.fhc-disclaimer { color: var(--faint); font-size: 12px; }
+
+.fade-in { animation: fade .45s ease both; }
+@keyframes fade { from { opacity: .001; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition: none !important; animation: none !important; } }
+
+/* ---------- FHC quick wizard (glass) ---------- */
+.fhc-modes { display: inline-flex; gap: 4px; padding: 4px; border-radius: 999px; background: var(--glass); border: 1px solid var(--stroke); margin-bottom: 18px; }
+.fhc-modes button { font-family: var(--font-display); border: 0; background: none; color: var(--muted); padding: 7px 16px; border-radius: 999px; cursor: pointer; font-size: 14px; }
+.fhc-modes button[aria-pressed="true"] { background: var(--glass-hi); color: var(--fg); box-shadow: inset 0 0 0 1px var(--stroke-hi); }
+.wz { display: grid; gap: 14px; max-width: 620px; }
+.wz-top { display: grid; gap: 8px; }
+.wz-count { font-family: var(--font-display); font-size: 13px; color: var(--muted); }
+.wz-bar { height: 6px; border-radius: 99px; background: rgba(255,255,255,.08); overflow: hidden; }
+.wz-bar i { display: block; height: 100%; border-radius: 99px; background: linear-gradient(90deg, var(--accent), var(--accent-2), var(--mint)); transition: width .35s ease; }
+.wz-card { background: var(--glass); border: 1px solid var(--stroke); border-radius: var(--r); padding: 24px; display: grid; gap: 14px; backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px); animation: fade .3s ease both; }
+.wz-q { font-family: var(--font-display); font-size: 22px; font-weight: 500; }
+.wz-hint { color: var(--muted); font-size: 14px; margin-top: -8px; }
+.wz-opts { display: grid; gap: 10px; grid-template-columns: repeat(auto-fit, minmax(min(200px, 100%), 1fr)); }
+.wz-opt { font-family: var(--font-display); text-align: left; border: 1px solid var(--stroke); background: var(--glass-in); border-radius: var(--r-sm); padding: 12px 16px; cursor: pointer; font-size: 15px; display: grid; transition: border-color .15s, background .15s, transform .15s; }
+.wz-opt small { font-family: var(--font-body); color: var(--muted); font-size: 12px; }
+.wz-opt:hover { border-color: var(--accent); transform: translateY(-1px); }
+.wz-opt[aria-pressed="true"] { background: linear-gradient(135deg, var(--accent), var(--accent-2)); color: var(--on-accent); border-color: transparent; }
+.wz-opt[aria-pressed="true"] small { color: var(--on-accent); }
+.wz-nav { display: flex; justify-content: space-between; gap: 10px; }
+.wz-back, .wz-detail { border: 0; background: none; color: var(--muted); cursor: pointer; font-size: 14px; padding: 4px 0; }
+.wz-back:hover, .wz-detail:hover { color: var(--fg); }
+.wz-field { display: grid; gap: 5px; font-size: 13px; color: var(--muted); }
+.wz-field input { width: 100%; padding: 10px 12px; border: 1px solid var(--stroke); border-radius: var(--r-sm); background: var(--glass-in); color: var(--fg); font-size: 15px; }
+.wz-field input:focus { border-color: var(--accent); outline: none; }
+.wz-consent { display: flex; gap: 10px; align-items: flex-start; font-size: 14px; color: var(--muted); }
+.wz-consent input { width: 18px; height: 18px; accent-color: var(--accent); margin-top: 3px; flex: none; }
+.wz-err { color: var(--bad); font-size: 14px; }
+.wz-go { justify-self: start; font-family: var(--font-display); border: 0; border-radius: 999px; padding: 10px 22px; cursor: pointer; font-weight: 500; background: linear-gradient(135deg, var(--accent), var(--accent-2)); color: var(--on-accent); }
+.url-set { display: flex; gap: 8px; flex-wrap: wrap; }
+.url-set input { flex: 1 1 220px; min-width: 0; padding: 8px 12px; border: 1px solid var(--stroke); border-radius: var(--r-sm); background: var(--glass-in); color: var(--fg); font-size: 13px; }
+
+/* ---------- Leads ---------- */
+.ld-kpi { grid-column: span 3; }
+@media (max-width: 900px) { .ld-kpi { grid-column: span 6; } }
+.ld-big { font-family: var(--font-display); font-size: 40px; font-weight: 600; line-height: 1.1; }
+.ld-big small { font-size: 22px; color: var(--muted); }
+.ld-kpi.hot .ld-big { color: var(--amber); }
+.ld-bars { display: grid; gap: 10px; }
+.ld-bar { display: grid; grid-template-columns: 120px 1fr 28px; gap: 10px; align-items: center; font-size: 14px; }
+.ld-bar i { height: 10px; border-radius: 99px; background: rgba(255,255,255,.07); position: relative; overflow: hidden; }
+.ld-bar i::after { content: ""; position: absolute; inset: 0; width: var(--w); border-radius: 99px; background: linear-gradient(90deg, var(--accent), var(--accent-2)); }
+.ld-bar b { text-align: right; font-weight: 500; }
+.ld-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 10px; padding: 14px 18px; border-bottom: 1px solid var(--stroke); }
+.ld-item { grid-template-columns: 120px 96px 1fr auto; }
+@media (max-width: 600px) { .ld-item { grid-template-columns: 1fr; } }
+
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs><linearGradient id="ringGrad" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#8fa3ff"/><stop offset=".6" stop-color="#c095ff"/><stop offset="1" stop-color="#62e2c6"/></linearGradient></defs>
+</svg>
+
+<header class="topbar">
+  <div class="topbar-in">
+    <div class="brand">
+      <div class="mark">HQ</div>
+      <div><h1>Content HQ การเงิน</h1><p id="today-label"></p></div>
+    </div>
+    <nav class="tabs" role="tablist" aria-label="เมนูหลัก">
+      <button class="tab" role="tab" id="tab-home" aria-controls="p-home" aria-selected="true">ภาพรวม</button>
+      <button class="tab" role="tab" id="tab-today" aria-controls="p-today" aria-selected="false">งานวันนี้</button>
+      <button class="tab" role="tab" id="tab-fhc" aria-controls="p-fhc" aria-selected="false">FHC ลูกค้า</button>
+      <button class="tab" role="tab" id="tab-leads" aria-controls="p-leads" aria-selected="false">Lead ลูกค้า</button>
+      <button class="tab" role="tab" id="tab-lib" aria-controls="p-lib" aria-selected="false">คลัง</button>
+    </nav>
+  </div>
+</header>
+
+<div class="wrap">
+  <div id="banner" class="banner" hidden></div>
+
+  <!-- ================= HOME ================= -->
+  <main id="p-home" role="tabpanel" aria-labelledby="tab-home" class="fade-in">
+    <div class="bento">
+      <section class="glass tile t-hero">
+        <p class="eyebrow" id="hello-eyebrow">วันนี้</p>
+        <h2 class="hello" id="hello">สวัสดี <em>ครีเอเตอร์</em></h2>
+        <div class="next" id="next-slot">
+          <div><p class="note">งานถัดไป</p><p class="time" id="next-time">—</p></div>
+          <div style="min-width:0;flex:1"><p id="next-what">กำลังโหลด…</p><p class="cd" id="next-cd"></p></div>
+        </div>
+        <div class="quick">
+          <button class="btn" id="q-today">เปิดงานวันนี้</button>
+          <button class="btn-ghost" id="q-fhc">ทำ FHC ให้ลูกค้า</button>
+          <button class="btn-ghost" id="q-copy-link">คัดลอกลิงก์ฟอร์มลูกค้า</button>
+        </div>
+      </section>
+
+      <section class="glass tile t-ring">
+        <p class="eyebrow">ความคืบหน้าวันนี้</p>
+        <div class="ring">
+          <svg viewBox="0 0 120 120" aria-hidden="true"><circle class="track" cx="60" cy="60" r="50" fill="none" stroke-width="12"/><circle class="bar" id="ring-bar" cx="60" cy="60" r="50" fill="none" stroke-width="12" stroke-linecap="round" stroke-dasharray="314.16" stroke-dashoffset="314.16"/></svg>
+          <div><p class="ring-num"><span id="ring-num">0</span><small>/4</small></p><p class="note">งานที่เสร็จ</p></div>
+        </div>
+        <ul class="checks" id="ring-checks"></ul>
+      </section>
+
+      <section class="glass tile t-week">
+        <div class="row" style="justify-content:space-between"><p class="eyebrow">7 วันล่าสุด</p><span class="note" id="week-sum"></span></div>
+        <div class="week-chart" id="week-chart"></div>
+      </section>
+
+      <section class="glass tile t-stats">
+        <p class="eyebrow">สถิติ</p>
+        <div class="stat-row">
+          <div class="stat"><b id="st-streak">0</b><span>วันติดต่อกัน</span></div>
+          <div class="stat"><b id="st-tt">0</b><span>คลิป TikTok ทั้งหมด</span></div>
+          <div class="stat"><b id="st-sp">0</b><span>โพสต์ Shopee ทั้งหมด</span></div>
+          <div class="stat"><b id="st-fhc">0</b><span>ลูกค้า FHC</span></div>
+        </div>
+      </section>
+
+      <section class="glass tile t-link">
+        <p class="eyebrow">ฟอร์มเช็กสุขภาพการเงินสำหรับลูกค้า</p>
+        <div class="link-box">
+          <div class="qr" id="qr" aria-label="QR code ลิงก์ฟอร์มลูกค้า"></div>
+          <div class="link-txt">
+            <p>ส่งลิงก์หรือให้ลูกค้าสแกน QR ลูกค้าเห็นคะแนนทันทีหลังส่ง คำตอบเข้า Google Sheet “FHC Leads” และมีอีเมลแจ้งคุณ</p>
+            <p class="url" id="form-url"></p>
+            <div class="url-set"><input id="form-url-in" placeholder="วางลิงก์ Google Form ที่นี่" aria-label="ลิงก์ฟอร์มลูกค้า"><button class="mini" id="form-url-save">บันทึกลิงก์</button></div>
+            <div class="row">
+              <button class="mini" id="copy-url">คัดลอกลิงก์</button>
+              <button class="mini" id="copy-invite">คัดลอกข้อความชวนลูกค้า</button>
+              <a class="mini" id="open-url" target="_blank" rel="noopener" style="text-decoration:none">เปิดดูฟอร์ม</a>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="glass tile t-fhc">
+        <p class="eyebrow">ลูกค้าล่าสุด</p>
+        <div id="home-fhc"><p class="note">ยังไม่มีลูกค้าที่บันทึกไว้ เริ่มได้ที่แท็บ FHC ลูกค้า</p></div>
+      </section>
+    </div>
+  </main>
+
+  <!-- ================= TODAY ================= -->
+  <main id="p-today" role="tabpanel" aria-labelledby="tab-today" hidden class="fade-in">
+    <div class="panel-head">
+      <div><p class="eyebrow">งานวันนี้</p><h2 id="today-title">4 งาน · 1 คลิป + 3 โพสต์</h2></div>
+      <button class="btn-ghost" id="sp-all">เขียนโพสต์ Shopee ทั้ง 3 ช่วง</button>
+    </div>
+    <div class="glass tile" style="margin-bottom:22px">
+      <div class="ctl-row">
+        <label class="ctl" for="tt-date"><span>วันที่</span><input type="date" id="tt-date"></label>
+        <label class="ctl" for="tt-pillar"><span>หัวข้อหลักของวัน</span><select id="tt-pillar"></select></label>
+        <label class="ctl" for="tt-aud"><span>กลุ่มเป้าหมาย</span>
+          <select id="tt-aud">
+            <option value="auto">ให้ AI เลือกให้เหมาะ</option>
+            <option>First Jobber 22–30</option>
+            <option>วัยทำงาน 30–45</option>
+            <option>คนมีหนี้ / เงินไม่พอใช้</option>
+            <option>ฟรีแลนซ์ / เจ้าของกิจการเล็ก</option>
+          </select></label>
+        <label class="ctl" for="tt-topic"><span>หัวข้อ/ข่าวที่อยากเล่า (ไม่บังคับ)</span><input id="tt-topic" placeholder="เว้นว่าง = AI คิดหัวข้อใหม่ให้"></label>
+      </div>
+    </div>
+
+    <div class="timeline">
+      <article class="glass tl" id="tl-tt">
+        <div class="tl-dot"><span>ทั้งวัน</span></div>
+        <div class="tl-head">
+          <h3>คลิป TikTok <span class="pill acc plain" id="pillar-pill"></span></h3>
+          <div class="row"><span id="tt-status"></span><button class="btn" id="tt-gen">สร้างสคริปต์</button></div>
+        </div>
+        <div class="tl-body"><div class="out empty" id="tt-out">ยังไม่มีสคริปต์ของวันนี้ กด “สร้างสคริปต์” แล้ว AI จะเลี่ยงหัวข้อที่เคยทำแล้ว</div></div>
+      </article>
+      <div id="slots" style="display:contents"></div>
+    </div>
+  </main>
+
+  <!-- ================= FHC ================= -->
+  <main id="p-fhc" role="tabpanel" aria-labelledby="tab-fhc" hidden class="fade-in">
+    <div class="panel-head">
+      <div><p class="eyebrow">Financial Health Check</p><h2>ตรวจสุขภาพการเงินลูกค้า</h2></div>
+      <p>กรอกระหว่างคุยกับลูกค้า ข้อมูลเก็บเฉพาะในบัญชีของคุณ</p>
+    </div>
+    <section class="glass list" id="fhc-saved-wrap" hidden style="margin-bottom:20px"><div id="fhc-saved"></div></section>
+    <div class="fhc-modes" role="group" aria-label="รูปแบบการกรอก"><button type="button" id="fm-quick" aria-pressed="true">แบบด่วน · กดเลือก 12 ข้อ</button><button type="button" id="fm-detail" aria-pressed="false">แบบละเอียด · ตัวเลขจริง</button></div>
+    <div id="fhc-quick"></div>
+    <div id="fhc-root" hidden></div>
+    <div id="fhc-ai" class="glass tile" hidden style="margin-top:16px"></div>
+  </main>
+
+  <!-- ================= LEADS ================= -->
+  <main id="p-leads" role="tabpanel" aria-labelledby="tab-leads" hidden class="fade-in">
+    <div class="panel-head">
+      <div><p class="eyebrow">จาก Google Form เช็กสุขภาพการเงิน</p><h2>Lead ลูกค้า</h2></div>
+      <div class="row"><span class="note" id="ld-updated"></span><button class="btn-ghost" id="ld-refresh">รีเฟรช</button><a class="btn-ghost" id="ld-sheet" href="https://docs.google.com/spreadsheets/d/19radMg0e0tzIqdeXywuRYZnS-1UDnaaelL0lXDKssWg/edit" target="_blank" rel="noopener" style="text-decoration:none">เปิด Google Sheet</a></div>
+    </div>
+    <div id="ld-state" class="glass tile" hidden></div>
+    <div id="ld-body" hidden>
+      <div class="bento">
+        <section class="glass tile ld-kpi"><p class="eyebrow">Lead ทั้งหมด</p><p class="ld-big num" id="ld-total">0</p><p class="note" id="ld-today"></p></section>
+        <section class="glass tile ld-kpi"><p class="eyebrow">คะแนนเฉลี่ย</p><p class="ld-big num" id="ld-avg">0</p><p class="note">จาก 100</p></section>
+        <section class="glass tile ld-kpi hot"><p class="eyebrow">🔥 Hot</p><p class="ld-big num" id="ld-hot">0</p><p class="note">ฝากเบอร์ + คะแนนต่ำกว่า 60</p></section>
+        <section class="glass tile ld-kpi"><p class="eyebrow">🌤 Warm · ❄️ Cold</p><p class="ld-big num"><span id="ld-warm">0</span><small> · </small><span id="ld-cold">0</span></p><p class="note">Warm = ฝากเบอร์ · Cold = ไม่ฝาก</p></section>
+        <section class="glass tile t-week"><div class="row" style="justify-content:space-between"><p class="eyebrow">คนกรอก 14 วันล่าสุด</p><span class="note" id="ld-14sum"></span></div><div class="week-chart" id="ld-chart"></div></section>
+        <section class="glass tile t-stats"><p class="eyebrow">จุดอ่อนที่เจอบ่อย</p><div id="ld-weak" class="ld-bars"></div></section>
+      </div>
+      <section class="glass list" style="margin-top:16px">
+        <div class="ld-head"><p class="eyebrow">ล่าสุด</p><div class="fhc-modes" role="group" aria-label="กรอง Lead" style="margin:0" id="ld-filter"><button type="button" data-f="all" aria-pressed="true">ทั้งหมด</button><button type="button" data-f="Hot" aria-pressed="false">Hot</button><button type="button" data-f="Warm" aria-pressed="false">Warm</button><button type="button" data-f="Cold" aria-pressed="false">Cold</button></div></div>
+        <div id="ld-list"></div>
+      </section>
+    </div>
+  </main>
+
+  <!-- ================= LIBRARY ================= -->
+  <main id="p-lib" role="tabpanel" aria-labelledby="tab-lib" hidden class="fade-in">
+    <div class="panel-head">
+      <div><p class="eyebrow">กันซ้ำอัตโนมัติ</p><h2>คลังคอนเทนต์ที่ใช้แล้ว</h2></div>
+      <label class="ctl" for="lib-filter" style="min-width:170px"><select id="lib-filter"><option value="all">ทั้งหมด</option><option value="TT">TikTok</option><option value="SP">Shopee</option></select></label>
+    </div>
+    <p class="note" style="margin-bottom:14px">เปิดสวิตช์ “ใช้แล้ว” หรือ “โพสต์แล้ว” ในหน้างานวันนี้ รายการจะเข้าคลัง AI จะเลี่ยงหัวข้อ TikTok ที่ใช้ใน 30 วัน และสินค้าที่ใช้ใน 14 วัน</p>
+    <section class="glass list" id="lib-list"><p class="empty-row">ยังไม่มีรายการ</p></section>
+  </main>
+</div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+/* Content HQ บน GitHub Pages: จำลอง window.claude.use() ให้ทำงานกับ Apps Script API
+   sample → Claude API (คีย์ของเจ้าของ เก็บใน Script Properties)
+   db     → แท็บ HQ_Store ใน Google Sheet
+   user   → "me"
+   mcp    → อ่าน HQ_Leads / HQ_Summary
+   ทุกคำขอต้องมีรหัส HQ_PIN ที่ตั้งไว้ฝั่ง Google (ไม่อยู่ในโค้ดนี้) */
+(function () {
+  "use strict";
+  const API = "https://script.google.com/macros/s/AKfycbxOSY_YQXOQ5crGogdm68_IdH-wnbw6AyX-fvTdbsAZI8bf0loixvYYk0mWztXpTodW/exec";
+  const KEY = "hq-pin";
+  const store = { get: (s, k) => { try { return s.getItem(k); } catch (e) { return null; } }, set: (s, k, v) => { try { s.setItem(k, v); } catch (e) {} }, del: (s, k) => { try { s.removeItem(k); } catch (e) {} } };
+  let pin = store.get(localStorage, KEY) || store.get(sessionStorage, KEY) || "";
+  let readyResolve; const ready = new Promise((r) => (readyResolve = r));
+
+  async function call(action, body) {
+    let res;
+    try { res = await fetch(API, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(Object.assign({ action, pin }, body || {})) }); }
+    catch (e) { throw { message: "เชื่อมต่อเซิร์ฟเวอร์ไม่ได้ ตรวจอินเทอร์เน็ตแล้วลองใหม่", code: "network" }; }
+    let j; try { j = await res.json(); } catch (e) { throw { message: "เซิร์ฟเวอร์ตอบกลับผิดรูปแบบ", code: "bad_response" }; }
+    if (!j.ok) {
+      if (j.error === "bad_pin") { lock(); throw { message: "รหัสไม่ถูกต้อง", code: "bad_pin" }; }
+      throw { message: j.error || "เกิดข้อผิดพลาด", code: j.error || "error" };
+    }
+    return j;
+  }
+
+  // ---------- PIN overlay ----------
+  const css = `.pin-ov{position:fixed;inset:0;z-index:50;display:grid;place-items:center;padding:16px;background:radial-gradient(1200px 600px at 20% 0%,#2a3a8f 0%,transparent 60%),radial-gradient(900px 500px at 100% 100%,#4b2f8f 0%,transparent 55%),#0b1030;font-family:Sarabun,system-ui,sans-serif;color:#eef1ff}
+.pin-card{box-sizing:border-box;width:min(360px,100%);display:grid;gap:14px;padding:28px 24px;border-radius:24px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.16);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);box-shadow:0 20px 60px rgba(0,0,0,.35);text-align:center}
+.pin-card h1{font-family:Prompt,sans-serif;font-size:22px;margin:0}.pin-card p{margin:0;color:#b8c0ea;font-size:14px}
+.pin-card input[type=password]{box-sizing:border-box;width:100%;font:inherit;font-size:22px;letter-spacing:.3em;text-align:center;padding:12px;border-radius:14px;border:1px solid rgba(255,255,255,.22);background:rgba(0,0,0,.25);color:#fff;outline:0}
+.pin-card input[type=password]:focus{border-color:#8fa3ff;box-shadow:0 0 0 3px rgba(143,163,255,.3)}
+.pin-card button{font:inherit;font-family:Prompt,sans-serif;font-size:16px;font-weight:600;padding:12px;border:0;border-radius:14px;cursor:pointer;color:#0b1030;background:linear-gradient(135deg,#8fa3ff,#c095ff 60%,#62e2c6)}
+.pin-card button:disabled{opacity:.6;cursor:wait}.pin-card label{display:flex;gap:8px;justify-content:center;align-items:center;font-size:14px;color:#b8c0ea}
+.pin-err{color:#ffb4c6!important;min-height:1.2em}
+.pin-lock{position:fixed;right:12px;bottom:12px;z-index:40;font:inherit;font-size:13px;padding:6px 12px;border-radius:99px;border:1px solid rgba(255,255,255,.2);background:rgba(11,16,48,.7);color:#dfe4ff;cursor:pointer;backdrop-filter:blur(8px)}`;
+  const st = document.createElement("style"); st.textContent = css; document.head.appendChild(st);
+
+  let ov = null;
+  function showLogin(msg) {
+    if (ov) { ov.querySelector(".pin-err").textContent = msg || ""; return; }
+    ov = document.createElement("div"); ov.className = "pin-ov";
+    ov.innerHTML = `<form class="pin-card" autocomplete="off"><h1>Content HQ การเงิน</h1><p>ใส่รหัสผ่านเพื่อเข้าใช้งาน</p>
+      <input type="password" id="pin-in" inputmode="numeric" aria-label="รหัสผ่าน" required>
+      <label for="pin-keep"><input type="checkbox" id="pin-keep" checked> จำในเครื่องนี้</label>
+      <button type="submit" id="pin-go">เข้าใช้งาน</button><p class="pin-err" role="alert">${msg || ""}</p></form>`;
+    document.body.appendChild(ov);
+    const inp = ov.querySelector("#pin-in"), btn = ov.querySelector("#pin-go"), err = ov.querySelector(".pin-err");
+    setTimeout(() => inp.focus(), 50);
+    ov.querySelector("form").addEventListener("submit", async (e) => {
+      e.preventDefault(); btn.disabled = true; err.textContent = "กำลังตรวจรหัส…"; pin = inp.value.trim();
+      try {
+        const j = await call("login");
+        store.set(ov.querySelector("#pin-keep").checked ? localStorage : sessionStorage, KEY, pin);
+        unlocked(j);
+      } catch (x) { err.textContent = x.message; btn.disabled = false; inp.select(); }
+    });
+  }
+  function unlocked(j) {
+    if (ov) { ov.remove(); ov = null; }
+    if (!document.querySelector(".pin-lock")) {
+      const b = document.createElement("button"); b.className = "pin-lock"; b.type = "button"; b.textContent = "🔒 ล็อก";
+      b.addEventListener("click", () => { lock(); location.reload(); });
+      document.body.appendChild(b);
+    }
+    if (j && j.ai === false) setTimeout(() => { const bn = document.getElementById("banner"); if (bn) { bn.textContent = "ยังไม่ได้ตั้งค่า ANTHROPIC_KEY ใน Apps Script ปุ่มให้ AI เขียนจะยังใช้ไม่ได้ (บันทึกงาน/FHC/Lead ใช้ได้ปกติ)"; bn.hidden = false; } }, 800);
+    readyResolve();
+  }
+  function lock() { pin = ""; store.del(localStorage, KEY); store.del(sessionStorage, KEY); }
+
+  function boot() {
+    if (!pin) return showLogin();
+    call("login").then(unlocked).catch((x) => showLogin(x.code === "bad_pin" ? "" : x.message));
+  }
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", boot); else boot();
+
+  // ---------- db (Firestore-like subset) ----------
+  const subs = new Set(); let writeQ = Promise.resolve();
+  const queue = (fn) => (writeQ = writeQ.then(fn, fn));
+  function snapDoc(id, data) { return { id, exists: data != null, data: () => (data == null ? undefined : JSON.parse(JSON.stringify(data))) }; }
+  async function refresh(col) { await Promise.all([...subs].filter((s) => !col || s.col === col).map((s) => s.run())); }
+  function query(col, order, lim) {
+    return {
+      orderBy: (f, dir) => query(col, { f, dir: dir || "asc" }, lim),
+      limit: (n) => query(col, order, n),
+      add: async (data) => { const j = await queue(() => call("add", { collection: col, data })); refresh(col); return { id: j.id }; },
+      doc: (id) => docRef(col, id),
+      get: async () => snapList(await call("list", { collection: col })),
+      onSnapshot(cb, onErr) {
+        const s = { col, run: async () => { try { cb(snapList(await call("list", { collection: col }))); } catch (e) { if (onErr) onErr(e); } } };
+        subs.add(s); s.run(); return () => subs.delete(s);
+      },
+    };
+    function snapList(j) {
+      let docs = (j.docs || []).map((d) => snapDoc(d.id, d.data));
+      if (order) docs.sort((a, b) => { const x = a.data()[order.f], y = b.data()[order.f]; const c = x > y ? 1 : x < y ? -1 : 0; return order.dir === "desc" ? -c : c; });
+      if (lim) docs = docs.slice(0, lim);
+      return { docs, size: docs.length, empty: !docs.length };
+    }
+  }
+  function docRef(col, id) {
+    return {
+      id,
+      get: async () => snapDoc(id, (await call("get", { collection: col, id })).doc),
+      set: async (data) => { await queue(() => call("set", { collection: col, id, data })); refresh(col); },
+      update: async (patch) => { await queue(async () => { const cur = (await call("get", { collection: col, id })).doc || {}; return call("set", { collection: col, id, data: Object.assign(cur, patch) }); }); refresh(col); },
+      delete: async () => { await queue(() => call("del", { collection: col, id })); refresh(col); },
+      onSnapshot(cb, onErr) {
+        const s = { col, run: async () => { try { cb(snapDoc(id, (await call("get", { collection: col, id })).doc)); } catch (e) { if (onErr) onErr(e); } } };
+        subs.add(s); s.run(); return () => subs.delete(s);
+      },
+    };
+  }
+  const db = { collection: (path) => query(path) };
+
+  // ---------- mcp (leads) ----------
+  const watchers = new Set();
+  const mcp = {
+    watchTool(server, tool, args, cb, opts) {
+      const w = { run: async () => { try { const j = await call("leads"); cb({ type: "result", result: { payload: { fileContent: j.text } } }); } catch (e) { cb({ type: "error", error: { code: e.message || e.code } }); } } };
+      watchers.add(w); w.run();
+      const t = setInterval(() => { if (!document.hidden) w.run(); }, 60000);
+      return () => { clearInterval(t); watchers.delete(w); };
+    },
+    invalidate: async () => { await Promise.all([...watchers].map((w) => w.run())); },
+  };
+
+  // ---------- real-time: รีเฟรชเมื่อกลับมาที่แท็บ + ทุก 2 นาที ----------
+  const syncAll = () => { refresh(); watchers.forEach((w) => w.run()); };
+  document.addEventListener("visibilitychange", () => { if (!document.hidden && pin) syncAll(); });
+  setInterval(() => { if (!document.hidden && pin) refresh(); }, 120000);
+
+  // ---------- sample (AI) ----------
+  async function sample(prompt, opts) {
+    const j = await call("ai", { prompt: String(prompt), maxTokens: (opts && opts.maxTokens) || 4000 });
+    if (opts && opts.onText) { try { opts.onText({ text: j.text }); } catch (e) {} }
+    return { text: j.text, model: j.model };
+  }
+  const user = { id: async () => "me", name: async () => "Satienpong" };
+
+  window.claude = {
+    use: async (cap) => { await ready; return { sample, db, user, mcp }[cap] || null; },
+  };
+})();
+
+</script>
+<script>
+/* Financial Health Check — shared core (calculation + form UI)
+ * ใช้ร่วมกันทั้งหน้า HQ (claude.ai) และหน้าสาธารณะ (GitHub Pages)
+ * ไม่มีการส่งข้อมูลออกจากเครื่อง: ทุกอย่างคำนวณใน browser
+ */
+(function (global) {
+  "use strict";
+
+  const DEBT_TYPES = [
+    { v: "home", t: "บ้าน/คอนโด", consumer: false },
+    { v: "car", t: "รถยนต์", consumer: false },
+    { v: "card", t: "บัตรเครดิต", consumer: true },
+    { v: "personal", t: "สินเชื่อส่วนบุคคล/บัตรกดเงินสด", consumer: true },
+    { v: "installment", t: "ผ่อนสินค้า 0%/ผ่อนของ", consumer: true },
+    { v: "business", t: "หนี้ธุรกิจ", consumer: false },
+    { v: "other", t: "อื่น ๆ", consumer: true },
+  ];
+
+  const WELFARE = [
+    { v: "none", t: "ไม่มีสวัสดิการรักษา" },
+    { v: "basic", t: "ประกันสังคม / บัตรทอง" },
+    { v: "gov", t: "สวัสดิการข้าราชการ / รัฐวิสาหกิจ" },
+    { v: "corp", t: "ประกันกลุ่มจากบริษัท" },
+  ];
+
+  const n = (x) => {
+    const v = parseFloat(String(x ?? "").replace(/,/g, ""));
+    return isFinite(v) && v > 0 ? v : 0;
+  };
+
+  /** คำนวณผลจากข้อมูลดิบ คืนค่า {metrics, score, level, risks, plan, gap} */
+  function calculate(input) {
+    const d = input || {};
+    const income = n(d.income);
+    const expense = n(d.expense);
+    const saving = n(d.saving);
+    const liquid = n(d.liquid);
+    const invest = n(d.invest);
+    const otherAssets = n(d.otherAssets);
+    const lifeCover = n(d.lifeCover);
+    const healthLimit = n(d.healthLimit);
+    const ciCover = n(d.ciCover);
+    const dependents = Math.round(n(d.dependents));
+    const freelance = !!d.freelance;
+    const debts = (d.debts || []).map((x) => ({
+      type: x.type || "other",
+      balance: n(x.balance),
+      payment: n(x.payment),
+      rate: n(x.rate),
+    }));
+
+    const debtTotal = debts.reduce((s, x) => s + x.balance, 0);
+    const payTotal = debts.reduce((s, x) => s + x.payment, 0);
+    const consumerPay = debts
+      .filter((x) => (DEBT_TYPES.find((t) => t.v === x.type) || {}).consumer)
+      .reduce((s, x) => s + x.payment, 0);
+    const assets = liquid + invest + otherAssets;
+    const netWorth = assets - debtTotal;
+
+    const efTarget = freelance ? 6 : 3;
+    const efMonths = expense > 0 ? liquid / expense : liquid > 0 ? 99 : 0;
+    const dsr = income > 0 ? payTotal / income : payTotal > 0 ? 1 : 0;
+    const consumerRatio = income > 0 ? consumerPay / income : consumerPay > 0 ? 1 : 0;
+    const savingRatio = income > 0 ? saving / income : 0;
+    const debtToAsset = assets > 0 ? debtTotal / assets : debtTotal > 0 ? 9 : 0;
+    const cashflow = income - expense - payTotal - saving;
+
+    // ทุนประกันชีวิตที่ควรมี (Need-based แบบย่อ)
+    const lifeNeed =
+      debtTotal +
+      (dependents > 0 ? expense * 12 * Math.min(10, 3 + dependents * 2) : 0) +
+      (dependents > 0 || debtTotal > 0 ? 100000 : 0);
+    const lifeRatio = lifeNeed > 0 ? lifeCover / lifeNeed : 1;
+    const welfare = d.welfare || "none";
+
+    // ---------- คะแนน (รวม 100) ----------
+    const sEF =
+      efMonths >= efTarget * 2 ? 20 : efMonths >= efTarget ? 16 : efMonths >= efTarget / 2 ? 9 : efMonths >= 0.5 ? 4 : 0;
+    const sDSR = dsr <= 0.25 ? 20 : dsr <= 0.35 ? 15 : dsr <= 0.45 ? 8 : dsr <= 0.6 ? 3 : 0;
+    const sCons = consumerRatio <= 0.1 ? 10 : consumerRatio <= 0.2 ? 6 : consumerRatio <= 0.3 ? 2 : 0;
+    const sSave = savingRatio >= 0.2 ? 15 : savingRatio >= 0.1 ? 11 : savingRatio >= 0.05 ? 6 : savingRatio > 0 ? 2 : 0;
+    const sDA = debtToAsset <= 0.3 ? 10 : debtToAsset <= 0.5 ? 7 : debtToAsset <= 0.8 ? 3 : 0;
+    const sLife = Math.round(Math.min(1, lifeRatio) * 15);
+    const welfareBase = welfare === "gov" ? 6 : welfare === "corp" ? 4 : welfare === "basic" ? 3 : 0;
+    const sHealth = Math.min(
+      10,
+      healthLimit >= 1000000 ? 10 : healthLimit >= 500000 ? 7 + (ciCover > 0 ? 1 : 0) : healthLimit > 0 ? 4 + (ciCover > 0 ? 1 : 0) : welfareBase + (ciCover > 0 ? 2 : 0)
+    );
+    const score = sEF + sDSR + sCons + sSave + sDA + sLife + sHealth;
+    const level =
+      score >= 80 ? { key: "good", t: "แข็งแรง" } : score >= 60 ? { key: "ok", t: "พอใช้" } : score >= 40 ? { key: "warn", t: "ต้องดูแล" } : { key: "bad", t: "วิกฤต" };
+
+    const st = (got, max) => (got >= max * 0.75 ? "good" : got >= max * 0.4 ? "warn" : "bad");
+    const pct = (v) => (v * 100).toFixed(0) + "%";
+    const metrics = [
+      { id: "ef", short: "สำรองฉุกเฉิน", name: "เงินสำรองฉุกเฉิน", value: efMonths >= 99 ? "—" : efMonths.toFixed(1) + " เดือน", target: `${efTarget}–${efTarget * 2} เดือน`, formula: "สินทรัพย์สภาพคล่อง ÷ ค่าใช้จ่ายต่อเดือน", score: sEF, max: 20, status: st(sEF, 20) },
+      { id: "dsr", short: "หนี้/รายได้", name: "ภาระหนี้ต่อรายได้ (DSR)", value: pct(dsr), target: "ไม่เกิน 35–40%", formula: "ค่างวดหนี้ทั้งหมด ÷ รายได้", score: sDSR, max: 20, status: st(sDSR, 20) },
+      { id: "cons", short: "หนี้บริโภค", name: "หนี้บริโภคต่อรายได้", value: pct(consumerRatio), target: "ไม่เกิน 15–20%", formula: "ค่างวดบัตร/สินเชื่อส่วนบุคคล/ผ่อนของ ÷ รายได้", score: sCons, max: 10, status: st(sCons, 10) },
+      { id: "save", short: "การออม", name: "อัตราการออมและลงทุน", value: pct(savingRatio), target: "10–20% ขึ้นไป", formula: "เงินออม+ลงทุนต่อเดือน ÷ รายได้", score: sSave, max: 15, status: st(sSave, 15) },
+      { id: "da", short: "หนี้/ทรัพย์สิน", name: "หนี้สินต่อทรัพย์สิน", value: assets > 0 ? pct(debtToAsset) : debtTotal > 0 ? "ไม่มีทรัพย์สิน" : "0%", target: "ต่ำกว่า 50%", formula: "หนี้สินรวม ÷ ทรัพย์สินรวม", score: sDA, max: 10, status: st(sDA, 10) },
+      { id: "life", short: "ประกันชีวิต", name: "ความคุ้มครองชีวิต", value: lifeNeed > 0 ? pct(Math.min(lifeRatio, 9.99)) + " ของที่ควรมี" : "ยังไม่มีภาระที่ต้องคุ้มครอง", target: lifeNeed > 0 ? "ทุนอย่างน้อย " + fmt(lifeNeed) + " บาท" : "—", formula: "ทุนประกันชีวิต ÷ (หนี้ + ค่าใช้จ่ายผู้ที่ต้องดูแล + ค่าใช้จ่ายสุดท้าย)", score: sLife, max: 15, status: st(sLife, 15) },
+      { id: "health", short: "สุขภาพ", name: "ความคุ้มครองสุขภาพ", value: healthLimit > 0 ? fmt(healthLimit) + " บาท/ปี" : (WELFARE.find((w) => w.v === welfare) || {}).t, target: "ผู้ป่วยใน 1 ล้านบาท/ปีขึ้นไป + โรคร้ายแรง", formula: "วงเงินค่ารักษาเทียบค่ารักษาโรงพยาบาลเอกชนปัจจุบัน", score: sHealth, max: 10, status: st(sHealth, 10) },
+    ];
+
+    // ---------- จุดเสี่ยง ----------
+    const risks = [];
+    if (cashflow < 0) risks.push({ w: 100, t: `กระแสเงินสดติดลบ ${fmt(-cashflow)} บาท/เดือน (รายจ่าย+หนี้+ออม มากกว่ารายได้)` });
+    if (efMonths < efTarget) risks.push({ w: 90 - efMonths * 10, t: `เงินสำรองมีแค่ ${efMonths.toFixed(1)} เดือน ถ้ารายได้หยุดจะอยู่ได้ไม่ถึง ${efTarget} เดือน` });
+    if (dsr > 0.4) risks.push({ w: 80 + dsr * 20, t: `ค่างวดหนี้กินรายได้ ${pct(dsr)} สูงเกินเกณฑ์ 40%` });
+    const highRate = debts.filter((x) => x.rate >= 15 && x.balance > 0);
+    if (highRate.length) risks.push({ w: 75, t: `มีหนี้ดอกเบี้ยสูง (≥15%/ปี) ${highRate.length} ก้อน รวม ${fmt(highRate.reduce((s, x) => s + x.balance, 0))} บาท` });
+    if (lifeNeed > 0 && lifeRatio < 0.6) risks.push({ w: 70, t: `ทุนประกันชีวิตขาดอีกประมาณ ${fmt(lifeNeed - lifeCover)} บาท หากเกิดเหตุไม่คาดฝัน ครอบครัวต้องรับภาระแทน` });
+    if (healthLimit < 500000 && welfare !== "gov") risks.push({ w: 65, t: "วงเงินค่ารักษาอาจไม่พอค่ารักษาโรงพยาบาลเอกชนหากป่วยหนัก" });
+    if (savingRatio < 0.1) risks.push({ w: 55, t: `ออมได้ ${pct(savingRatio)} ของรายได้ ต่ำกว่าเกณฑ์ 10%` });
+    if (netWorth < 0) risks.push({ w: 60, t: `ความมั่งคั่งสุทธิติดลบ ${fmt(-netWorth)} บาท` });
+    risks.sort((a, b) => b.w - a.w);
+
+    // ---------- แผน 30/90/365 ----------
+    const plan = { d30: [], d90: [], d365: [] };
+    plan.d30.push("จดรายรับรายจ่ายทุกวัน 30 วัน เพื่อหาจุดรั่ว");
+    if (cashflow < 0) plan.d30.push(`ตัดค่าใช้จ่ายไม่จำเป็นอย่างน้อย ${fmt(-cashflow)} บาท/เดือน ให้กระแสเงินสดกลับมาเป็นบวก`);
+    if (efMonths < efTarget) plan.d30.push(`แยกบัญชีเงินสำรองฉุกเฉิน ตั้งโอนอัตโนมัติวันเงินเดือนออก (เป้าหมาย ${fmt(expense * efTarget)} บาท)`);
+    if (highRate.length) plan.d30.push("หยุดก่อหนี้บริโภคใหม่ และจ่ายหนี้ดอกเบี้ยสูงมากกว่าขั้นต่ำ");
+    if (debts.length > 1) plan.d90.push("เรียงหนี้ตามดอกเบี้ย (Avalanche) หรือยอดน้อยสุด (Snowball) แล้วโปะทีละก้อน");
+    if (dsr > 0.4) plan.d90.push("ติดต่อเจ้าหนี้เรื่องปรับโครงสร้าง/รวมหนี้/รีไฟแนนซ์ ให้ค่างวดต่ำกว่า 40% ของรายได้");
+    if (healthLimit < 1000000 && welfare !== "gov") plan.d90.push("ทบทวนประกันสุขภาพให้วงเงินผู้ป่วยในเพียงพอ ก่อนอายุและสุขภาพเปลี่ยน");
+    if (lifeNeed > 0 && lifeRatio < 1) plan.d90.push(`ปิดช่องว่างทุนประกันชีวิต ${fmt(Math.max(0, lifeNeed - lifeCover))} บาท ด้วยแบบที่เบี้ยเหมาะกับงบ`);
+    if (savingRatio < 0.1) plan.d90.push("ตั้งออมก่อนใช้ อย่างน้อย 10% ของรายได้ ทันทีที่เงินเข้า");
+    plan.d365.push("เงินสำรองฉุกเฉินครบตามเป้า และเริ่มลงทุนสม่ำเสมอ (DCA) ตามความเสี่ยงที่รับได้");
+    plan.d365.push("ใช้สิทธิลดหย่อนภาษีให้ครบ (ประกันชีวิต ประกันสุขภาพ กองทุนลดหย่อนภาษี)");
+    plan.d365.push("ทำ Financial Health Check ซ้ำทุก 6–12 เดือน");
+
+    return {
+      totals: { income, expense, saving, payTotal, debtTotal, assets, netWorth, cashflow, lifeNeed, lifeCover },
+      metrics,
+      score,
+      level,
+      risks: risks.slice(0, 3).map((r) => r.t),
+      allRisks: risks.map((r) => r.t),
+      plan,
+      gap: { life: Math.max(0, lifeNeed - lifeCover), healthOk: healthLimit >= 1000000 || welfare === "gov" },
+    };
+  }
+
+  function fmt(v) {
+    return Math.round(v).toLocaleString("th-TH");
+  }
+
+  /** ข้อความสรุปสำหรับส่ง LINE (ไม่ใช้ AI) */
+  function lineSummary(input, r, opts) {
+    const o = opts || {};
+    const L = [];
+    L.push(`📋 ผลเช็กสุขภาพการเงิน${input.name ? " ของ " + input.name : ""}`);
+    L.push(`คะแนน ${r.score}/100 ระดับ: ${r.level.t}`);
+    L.push("");
+    r.metrics.forEach((m) => L.push(`${m.status === "good" ? "🟢" : m.status === "warn" ? "🟡" : "🔴"} ${m.name}: ${m.value}`));
+    if (r.risks.length) {
+      L.push("");
+      L.push("⚠️ จุดที่ควรดูแลก่อน");
+      r.risks.forEach((t, i) => L.push(`${i + 1}. ${t}`));
+    }
+    L.push("");
+    L.push(o.footer || "ผลประเมินเบื้องต้นเพื่อการศึกษา ไม่ใช่คำแนะนำการลงทุน");
+    return L.join("\n");
+  }
+
+
+  /** กราฟเรดาร์ 7 ด้าน (SVG string) opt: {size, grid, stroke, fill, text, dot} */
+  function radarSVG(metrics, opt) {
+    const o = Object.assign({ size: 300, grid: "currentColor", stroke: "currentColor", fill: "currentColor", text: "currentColor", dot: "currentColor" }, opt || {});
+    const S = o.size, cx = S / 2, cy = S / 2, R = S * 0.32, N = metrics.length;
+    const pt = (i, r) => { const a = -Math.PI / 2 + (i * 2 * Math.PI) / N; return [cx + r * Math.cos(a), cy + r * Math.sin(a)]; };
+    let g = "";
+    [0.25, 0.5, 0.75, 1].forEach((k) => {
+      g += `<polygon points="${metrics.map((_, i) => pt(i, R * k).join(",")).join(" ")}" fill="none" stroke="${o.grid}" stroke-opacity="${k === 1 ? 0.5 : 0.22}" stroke-width="1"/>`;
+    });
+    metrics.forEach((_, i) => { const [x, y] = pt(i, R); g += `<line x1="${cx}" y1="${cy}" x2="${x}" y2="${y}" stroke="${o.grid}" stroke-opacity="0.22"/>`; });
+    const vals = metrics.map((m, i) => pt(i, R * Math.max(0.04, m.score / m.max)));
+    g += `<polygon points="${vals.map((p) => p.join(",")).join(" ")}" fill="${o.fill}" fill-opacity="0.28" stroke="${o.stroke}" stroke-width="2" stroke-linejoin="round"/>`;
+    vals.forEach((p) => (g += `<circle cx="${p[0]}" cy="${p[1]}" r="3.5" fill="${o.dot}"/>`));
+    metrics.forEach((m, i) => {
+      const [x, y] = pt(i, R + S * 0.1);
+      const anchor = Math.abs(x - cx) < 4 ? "middle" : x > cx ? "start" : "end";
+      g += `<text x="${x}" y="${y}" text-anchor="${anchor}" dominant-baseline="middle" font-size="${S * 0.04}" fill="${o.text}">${m.short}</text>`;
+      g += `<text x="${x}" y="${y + S * 0.048}" text-anchor="${anchor}" dominant-baseline="middle" font-size="${S * 0.034}" fill="${o.text}" fill-opacity="0.6">${m.score}/${m.max}</text>`;
+    });
+    return `<svg viewBox="${-S * 0.12} 0 ${S * 1.24} ${S}" width="100%" role="img" aria-label="กราฟเรดาร์สุขภาพการเงิน 7 ด้าน">${g}</svg>`;
+  }
+
+
+  // ---------------- QUICK MODE (tap-only) ----------------
+  const QUICK = [
+    { k: "age", q: "อายุเท่าไหร่", opts: [["ต่ำกว่า 25", 22], ["25–34", 30], ["35–44", 40], ["45–54", 50], ["55 ขึ้นไป", 58]] },
+    { k: "dependents", q: "มีคนที่พึ่งพารายได้ของคุณกี่คน", hint: "พ่อแม่ ลูก หรือคู่สมรสที่คุณช่วยดูแลค่าใช้จ่าย", opts: [["ไม่มี", 0], ["1 คน", 1], ["2 คน", 2], ["3 คนขึ้นไป", 3]] },
+    { k: "freelance", q: "รายได้เป็นแบบไหน", opts: [["เงินเดือนประจำ", false], ["ไม่แน่นอน", true, "ฟรีแลนซ์ ค้าขาย เจ้าของกิจการ"]] },
+    { k: "income", q: "รายได้ต่อเดือนประมาณเท่าไหร่", hint: "หลังหักภาษีและประกันสังคม", opts: [["ต่ำกว่า 15,000", 12000], ["15,000–25,000", 20000], ["25,000–40,000", 32000], ["40,000–70,000", 55000], ["70,000 ขึ้นไป", 90000]] },
+    { k: "debtLoad", q: "ค่าผ่อนหนี้ทุกก้อนรวมกัน คิดเป็นเท่าไหร่ของรายได้", hint: "บ้าน รถ บัตร สินเชื่อ ผ่อนของ", opts: [["ไม่มีหนี้", 0], ["ไม่ถึง 20%", 0.15], ["20–40%", 0.3], ["40–60%", 0.5], ["มากกว่า 60%", 0.65]] },
+    { k: "consumer", q: "มีหนี้บัตรเครดิต หรือสินเชื่อส่วนบุคคลไหม", opts: [["ไม่มี", 0], ["มีนิดหน่อย", 0.4], ["เป็นหนี้ส่วนใหญ่", 0.85]], skipIf: (a) => a.debtLoad === 0 },
+    { k: "left", q: "จ่ายค่ากินอยู่และผ่อนหนี้แล้ว เงินเหลือแค่ไหน", opts: [["ไม่พอใช้", -0.05, "ต้องยืมหรือรูดบัตร"], ["เหลือนิดหน่อย", 0.05, "ไม่ถึง 10%"], ["เหลือ 10–20%", 0.15], ["เหลือ 20–30%", 0.25], ["เหลือมากกว่า 30%", 0.35]] },
+    { k: "save", q: "ออมหรือลงทุนทุกเดือนไหม", opts: [["ยังไม่ได้ออม", 0], ["ไม่ถึง 5%", 0.03], ["5–10%", 0.08], ["10–20%", 0.15], ["มากกว่า 20%", 0.25]] },
+    { k: "ef", q: "ถ้ารายได้หยุดวันนี้ เงินสดที่มีอยู่ได้กี่เดือน", opts: [["ไม่ถึง 1 เดือน", 0.5], ["1–3 เดือน", 2], ["3–6 เดือน", 4.5], ["6–12 เดือน", 8], ["มากกว่า 1 ปี", 14]] },
+    { k: "assets", q: "มีทรัพย์สินอื่นรวมกันประมาณเท่าไหร่", hint: "บ้าน รถ ที่ดิน หุ้น กองทุน ทอง", opts: [["แทบไม่มี", 0], ["ไม่ถึง 5 แสน", 250000], ["5 แสน–2 ล้าน", 1200000], ["2–5 ล้าน", 3500000], ["มากกว่า 5 ล้าน", 7000000]] },
+    { k: "health", q: "ถ้าต้องนอนโรงพยาบาล ใช้สิทธิ์อะไร", opts: [["ไม่มีเลย", "none"], ["ประกันสังคม / บัตรทอง", "basic"], ["ประกันกลุ่มของบริษัท", "corp"], ["สวัสดิการข้าราชการ", "gov"], ["ประกันสุขภาพที่ซื้อเอง ต่ำกว่า 1 ล้าน", "own-low"], ["ประกันสุขภาพที่ซื้อเอง 1 ล้านขึ้นไป", "own-high"]] },
+    { k: "life", q: "ทุนประกันชีวิตรวมประมาณเท่าไหร่", opts: [["ไม่มี / ไม่แน่ใจ", 0], ["ไม่ถึง 5 แสน", 300000], ["5 แสน–1 ล้าน", 750000], ["1–3 ล้าน", 2000000], ["มากกว่า 3 ล้าน", 4000000]] },
+  ];
+
+  /** แปลงคำตอบโหมดด่วนเป็นข้อมูลตัวเลขโดยประมาณ */
+  function quickToInput(a) {
+    const income = a.income || 0;
+    const pay = income * (a.debtLoad || 0);
+    const consumerPay = pay * (a.debtLoad ? a.consumer || 0 : 0);
+    const otherPay = pay - consumerPay;
+    const outflow = income * (1 - (a.left ?? 0.1));
+    const expense = Math.max(income * 0.2, outflow - pay);
+    const debts = [];
+    if (consumerPay > 0) debts.push({ type: "card", balance: Math.round(consumerPay * 24), payment: Math.round(consumerPay), rate: 18 });
+    if (otherPay > 0) debts.push({ type: "car", balance: Math.round(otherPay * 60), payment: Math.round(otherPay), rate: 5 });
+    const h = a.health || "basic";
+    return {
+      name: a.name || "", age: a.age || 0, dependents: a.dependents || 0, freelance: !!a.freelance,
+      income: Math.round(income), expense: Math.round(expense), saving: Math.round(income * (a.save || 0)),
+      debts, liquid: Math.round(expense * (a.ef ?? 1)), invest: 0, otherAssets: a.assets || 0,
+      lifeCover: a.life || 0,
+      healthLimit: h === "own-high" ? 1500000 : h === "own-low" ? 400000 : 0,
+      ciCover: 0, welfare: h.startsWith("own") ? "basic" : h,
+      goal: a.goal || "", consent: !!a.consent, quick: true,
+    };
+  }
+
+  /**
+   * wizard(el, {mode, onDone(input, answers), consentText, startName})
+   * แสดงทีละคำถาม แตะแล้วไปข้อถัดไปอัตโนมัติ
+   */
+  function wizard(el, opts) {
+    const o = opts || {};
+    let a = Object.assign({}, o.answers || {});
+    const list = () => QUICK.filter((q) => !(q.skipIf && q.skipIf(a)));
+    let i = 0;
+    const total = () => list().length + 1;
+    function frame(inner, idx) {
+      const pct = Math.round((idx / total()) * 100);
+      return `<div class="wz">
+        <div class="wz-top"><span class="wz-count">${idx < total() - 1 ? `ข้อ ${idx + 1} จาก ${total() - 1}` : "ขั้นสุดท้าย"}</span><div class="wz-bar"><i style="width:${pct}%"></i></div></div>
+        <div class="wz-card">${inner}</div>
+        <div class="wz-nav">${idx > 0 ? '<button type="button" class="wz-back">← ย้อนกลับ</button>' : "<span></span>"}${o.onDetail ? '<button type="button" class="wz-detail">กรอกตัวเลขจริงแทน</button>' : ""}</div>
+      </div>`;
+    }
+    function render() {
+      const L = list();
+      if (i < L.length) {
+        const q = L[i];
+        el.innerHTML = frame(`<p class="wz-q">${esc(q.q)}</p>${q.hint ? `<p class="wz-hint">${esc(q.hint)}</p>` : ""}
+          <div class="wz-opts">${q.opts.map((op, j) => `<button type="button" class="wz-opt" data-j="${j}" aria-pressed="${a[q.k] !== undefined && a[q.k] === op[1]}"><span>${esc(op[0])}</span>${op[2] ? `<small>${esc(op[2])}</small>` : ""}</button>`).join("")}</div>`, i);
+        el.querySelectorAll(".wz-opt").forEach((b) => b.addEventListener("click", () => {
+          a[q.k] = q.opts[+b.dataset.j][1];
+          el.querySelectorAll(".wz-opt").forEach((x) => x.setAttribute("aria-pressed", String(x === b)));
+          setTimeout(() => { i++; render(); }, 220);
+        }));
+      } else {
+        el.innerHTML = frame(`<p class="wz-q">เกือบเสร็จแล้ว</p>
+          <label class="wz-field" for="wz-name"><span>${o.mode === "owner" ? "ชื่อเล่นลูกค้า" : "อยากให้เรียกว่าอะไร (ไม่บังคับ)"}</span><input id="wz-name" type="text" value="${esc(a.name || "")}" placeholder="เช่น มิว" autocomplete="off"></label>
+          <label class="wz-consent" for="wz-consent"><input id="wz-consent" type="checkbox" ${a.consent ? "checked" : ""}><span>${esc(o.consentText || "เข้าใจแล้วว่าเป็นการประเมินเบื้องต้น")}</span></label>
+          <p class="wz-err" hidden>ติ๊กช่องด้านบนก่อนดูผลนะ</p>
+          <button type="button" class="wz-go">ดูผลเลย</button>`, L.length);
+        el.querySelector(".wz-go").addEventListener("click", () => {
+          a.name = el.querySelector("#wz-name").value.trim();
+          a.consent = el.querySelector("#wz-consent").checked;
+          if (!a.consent) { el.querySelector(".wz-err").hidden = false; return; }
+          o.onDone && o.onDone(quickToInput(a), a);
+        });
+      }
+      const bk = el.querySelector(".wz-back"); if (bk) bk.addEventListener("click", () => { i = Math.max(0, i - 1); render(); });
+      const dt = el.querySelector(".wz-detail"); if (dt) dt.addEventListener("click", () => o.onDetail(quickToInput(a), a));
+    }
+    render();
+    return { reset(ans) { a = Object.assign({}, ans || {}); i = 0; render(); }, get answers() { return a; } };
+  }
+
+  // ---------------- UI ----------------
+  const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+
+  function field(id, label, opts) {
+    const o = opts || {};
+    const hint = o.hint ? `<small class="fhc-hint">${esc(o.hint)}</small>` : "";
+    return `<label class="fhc-field" for="${id}"><span>${esc(label)}</span>
+      <input id="${id}" name="${id}" inputmode="${o.text ? "text" : "decimal"}" ${o.text ? 'type="text"' : 'type="text" data-num="1"'} placeholder="${esc(o.ph || (o.text ? "" : "0"))}" autocomplete="off">${hint}</label>`;
+  }
+
+  function formHTML(mode) {
+    const owner = mode === "owner";
+    return `
+    <form class="fhc-form" id="fhc-form" novalidate>
+      <fieldset class="fhc-set"><legend>ข้อมูลพื้นฐาน</legend>
+        <div class="fhc-grid">
+          ${field("fhc-name", owner ? "ชื่อเล่นลูกค้า" : "ชื่อเล่น (ไม่บังคับ)", { text: true, ph: "เช่น พี่นก" })}
+          ${field("fhc-age", "อายุ (ปี)", { ph: "30" })}
+          ${field("fhc-dependents", "จำนวนคนที่ต้องดูแล", { ph: "0", hint: "พ่อแม่ ลูก คู่สมรสที่พึ่งพารายได้คุณ" })}
+          <label class="fhc-field fhc-check" for="fhc-freelance"><input id="fhc-freelance" name="fhc-freelance" type="checkbox"><span>รายได้ไม่แน่นอน (ฟรีแลนซ์/ค้าขาย/เจ้าของกิจการ)</span></label>
+        </div>
+      </fieldset>
+      <fieldset class="fhc-set"><legend>รายรับ-รายจ่ายต่อเดือน (บาท)</legend>
+        <div class="fhc-grid">
+          ${field("fhc-income", "รายได้รวมต่อเดือน (หลังหักภาษี/ประกันสังคม)")}
+          ${field("fhc-expense", "ค่าใช้จ่ายต่อเดือน (ไม่รวมค่างวดหนี้)", { hint: "ค่ากิน ค่าเดินทาง ค่าเช่า ค่าน้ำไฟ ฯลฯ" })}
+          ${field("fhc-saving", "เงินออม+ลงทุนต่อเดือน")}
+        </div>
+      </fieldset>
+      <fieldset class="fhc-set"><legend>หนี้สิน</legend>
+        <div class="fhc-debts" id="fhc-debts"></div>
+        <button type="button" class="fhc-btn-ghost" id="fhc-add-debt">+ เพิ่มหนี้</button>
+      </fieldset>
+      <fieldset class="fhc-set"><legend>ทรัพย์สิน (บาท)</legend>
+        <div class="fhc-grid">
+          ${field("fhc-liquid", "เงินสด/เงินฝาก (ถอนได้ทันที)")}
+          ${field("fhc-invest", "เงินลงทุน (หุ้น กองทุน ทอง ฯลฯ)")}
+          ${field("fhc-otherAssets", "ทรัพย์สินอื่น (บ้าน รถ ที่ดิน)", { hint: "มูลค่าตลาดโดยประมาณ" })}
+        </div>
+      </fieldset>
+      <fieldset class="fhc-set"><legend>ความคุ้มครองที่มีอยู่</legend>
+        <div class="fhc-grid">
+          ${field("fhc-lifeCover", "ทุนประกันชีวิตรวม (บาท)")}
+          ${field("fhc-healthLimit", "วงเงินค่ารักษาผู้ป่วยใน ต่อปี (บาท)")}
+          ${field("fhc-ciCover", "ทุนประกันโรคร้ายแรง (บาท)")}
+          <label class="fhc-field" for="fhc-welfare"><span>สวัสดิการรักษาพยาบาล</span>
+            <select id="fhc-welfare" name="fhc-welfare">${WELFARE.map((w) => `<option value="${w.v}">${w.t}</option>`).join("")}</select></label>
+        </div>
+      </fieldset>
+      <fieldset class="fhc-set"><legend>เป้าหมายการเงิน</legend>
+        <label class="fhc-field" for="fhc-goal"><span>อยากให้การเงินเป็นแบบไหนใน 1–5 ปี</span>
+          <textarea id="fhc-goal" name="fhc-goal" rows="2" placeholder="เช่น ปลดหนี้บัตรให้หมด มีเงินสำรอง 6 เดือน ซื้อคอนโด"></textarea></label>
+      </fieldset>
+      <label class="fhc-consent" for="fhc-consent"><input id="fhc-consent" name="fhc-consent" type="checkbox">
+        <span>${owner ? "ลูกค้ายินยอมให้เก็บข้อมูลนี้เพื่อใช้วางแผนการเงิน (PDPA)" : "ฉันเข้าใจว่าผลนี้เป็นการประเมินเบื้องต้น ข้อมูลคำนวณในเครื่องของฉันเท่านั้น ไม่ถูกส่งไปที่ใดจนกว่าฉันจะกดส่งเอง"}</span></label>
+      <div class="fhc-actions">
+        <button type="submit" class="fhc-btn">ดูผลสุขภาพการเงิน</button>
+        <button type="button" class="fhc-btn-ghost" id="fhc-sample">ลองกรอกตัวอย่าง</button>
+        <button type="button" class="fhc-btn-ghost" id="fhc-reset">ล้างข้อมูล</button>
+      </div>
+      <p class="fhc-err" id="fhc-err" role="alert" hidden></p>
+    </form>
+    <section class="fhc-result" id="fhc-result" hidden aria-live="polite"></section>`;
+  }
+
+  function debtRow(i, d) {
+    const x = d || {};
+    return `<div class="fhc-debt" data-i="${i}">
+      <label class="fhc-field" for="fhc-dt-${i}"><span>ประเภท</span><select id="fhc-dt-${i}">${DEBT_TYPES.map((t) => `<option value="${t.v}" ${x.type === t.v ? "selected" : ""}>${t.t}</option>`).join("")}</select></label>
+      <label class="fhc-field" for="fhc-db-${i}"><span>ยอดคงเหลือ</span><input id="fhc-db-${i}" type="text" inputmode="decimal" data-num="1" value="${esc(x.balance || "")}" placeholder="0"></label>
+      <label class="fhc-field" for="fhc-dp-${i}"><span>ค่างวด/เดือน</span><input id="fhc-dp-${i}" type="text" inputmode="decimal" data-num="1" value="${esc(x.payment || "")}" placeholder="0"></label>
+      <label class="fhc-field" for="fhc-dr-${i}"><span>ดอกเบี้ย %/ปี</span><input id="fhc-dr-${i}" type="text" inputmode="decimal" value="${esc(x.rate || "")}" placeholder="0"></label>
+      <button type="button" class="fhc-x" aria-label="ลบหนี้รายการนี้" data-del="${i}">×</button>
+    </div>`;
+  }
+
+  const SAMPLE = {
+    name: "ตัวอย่าง: มิว", age: 28, dependents: 1, freelance: false,
+    income: 32000, expense: 17000, saving: 2000,
+    debts: [ { type: "car", balance: 380000, payment: 8200, rate: 3 }, { type: "card", balance: 45000, payment: 2500, rate: 16 } ],
+    liquid: 25000, invest: 15000, otherAssets: 450000,
+    lifeCover: 200000, healthLimit: 0, ciCover: 0, welfare: "basic",
+    goal: "ปลดหนี้บัตร มีเงินสำรอง 6 เดือน",
+  };
+
+  function resultHTML(input, r, mode) {
+    const statusT = { good: "ดี", warn: "ควรปรับ", bad: "เสี่ยง" };
+    const ring = Math.max(0, Math.min(100, r.score));
+    return `
+      <div class="fhc-top">
+      <div class="fhc-score fhc-lv-${r.level.key}">
+        <div class="fhc-gauge" style="--p:${ring}"><div><b>${r.score}</b><span>/100</span></div></div>
+        <div class="fhc-score-txt">
+          <p class="fhc-eyebrow">คะแนนสุขภาพการเงิน${input.name ? " · " + esc(input.name) : ""}</p>
+          <h3>ระดับ: ${r.level.t}</h3>
+          <p>กระแสเงินสดคงเหลือ <b class="fhc-num">${fmt(r.totals.cashflow)}</b> บาท/เดือน · ความมั่งคั่งสุทธิ <b class="fhc-num">${fmt(r.totals.netWorth)}</b> บาท</p>
+        </div>
+      </div>
+      <div class="fhc-radar">${radarSVG(r.metrics)}</div>
+      </div>
+      <div class="fhc-table-wrap"><table class="fhc-table">
+        <thead><tr><th>ด้าน</th><th>ผลของคุณ</th><th>เกณฑ์</th><th>คะแนน</th></tr></thead>
+        <tbody>${r.metrics.map((m) => `<tr><td><span class="fhc-pill fhc-${m.status}">${statusT[m.status]}</span> ${esc(m.name)}<small>${esc(m.formula)}</small></td><td class="fhc-num">${esc(m.value)}</td><td>${esc(m.target)}</td><td class="fhc-num">${m.score}/${m.max}</td></tr>`).join("")}</tbody>
+      </table></div>
+      ${r.risks.length ? `<div class="fhc-block"><h4>3 จุดที่ควรดูแลก่อน</h4><ol>${r.risks.map((t) => `<li>${esc(t)}</li>`).join("")}</ol></div>` : `<div class="fhc-block"><h4>ไม่พบจุดเสี่ยงสำคัญ</h4><p>รักษาวินัยนี้ไว้ และทบทวนทุก 6–12 เดือน</p></div>`}
+      <div class="fhc-plan">
+        <div><h4>30 วัน</h4><ul>${r.plan.d30.map((t) => `<li>${esc(t)}</li>`).join("")}</ul></div>
+        <div><h4>90 วัน</h4><ul>${r.plan.d90.map((t) => `<li>${esc(t)}</li>`).join("") || "<li>รักษาแผนเดิม</li>"}</ul></div>
+        <div><h4>1 ปี</h4><ul>${r.plan.d365.map((t) => `<li>${esc(t)}</li>`).join("")}</ul></div>
+      </div>
+      <p class="fhc-disclaimer">ผลประเมินเบื้องต้นเพื่อการศึกษา ใช้เกณฑ์ทั่วไป ไม่ใช่คำแนะนำการลงทุน ควรปรึกษาผู้เชี่ยวชาญก่อนตัดสินใจ</p>
+      <div class="fhc-actions" id="fhc-result-actions"></div>`;
+  }
+
+  /**
+   * mount(el, {mode:"owner"|"public", onResult(input,result), actions:[{id,label,primary,onClick(input,result,btn)}], initial})
+   */
+  function mount(el, opts) {
+    const o = opts || {};
+    el.innerHTML = formHTML(o.mode);
+    const form = el.querySelector("#fhc-form");
+    const debtsEl = el.querySelector("#fhc-debts");
+    const resEl = el.querySelector("#fhc-result");
+    const errEl = el.querySelector("#fhc-err");
+    let debtCount = 0;
+    let last = null;
+
+    function addDebt(d) { debtsEl.insertAdjacentHTML("beforeend", debtRow(debtCount++, d)); }
+    function setVal(id, v) { const f = el.querySelector("#fhc-" + id); if (!f) return; if (f.type === "checkbox") f.checked = !!v; else f.value = f.dataset.num && n(v) ? n(v).toLocaleString("en-US") : (v ?? ""); }
+    function fill(d) {
+      ["name", "age", "dependents", "income", "expense", "saving", "liquid", "invest", "otherAssets", "lifeCover", "healthLimit", "ciCover", "goal"].forEach((k) => setVal(k, d[k]));
+      setVal("freelance", d.freelance); setVal("welfare", d.welfare || "none"); setVal("consent", d.consent);
+      debtsEl.innerHTML = ""; debtCount = 0;
+      (d.debts && d.debts.length ? d.debts : [{}]).forEach(addDebt);
+    }
+    function read() {
+      const g = (id) => { const f = el.querySelector("#fhc-" + id); return f ? (f.type === "checkbox" ? f.checked : f.value.trim()) : ""; };
+      const debts = [...debtsEl.querySelectorAll(".fhc-debt")].map((row) => {
+        const i = row.dataset.i;
+        return { type: el.querySelector("#fhc-dt-" + i).value, balance: n(el.querySelector("#fhc-db-" + i).value), payment: n(el.querySelector("#fhc-dp-" + i).value), rate: n(el.querySelector("#fhc-dr-" + i).value) };
+      }).filter((x) => x.balance || x.payment);
+      const out = { name: g("name"), age: n(g("age")), dependents: n(g("dependents")), freelance: g("freelance"), welfare: g("welfare"), goal: g("goal"), consent: g("consent"), debts };
+      ["income", "expense", "saving", "liquid", "invest", "otherAssets", "lifeCover", "healthLimit", "ciCover"].forEach((k) => (out[k] = n(g(k))));
+      return out;
+    }
+    function show(input) {
+      const r = calculate(input);
+      last = { input, result: r };
+      resEl.innerHTML = resultHTML(input, r, o.mode);
+      resEl.hidden = false;
+      const act = resEl.querySelector("#fhc-result-actions");
+      (o.actions || []).forEach((a) => {
+        const b = document.createElement("button");
+        b.type = "button"; b.className = a.primary ? "fhc-btn" : "fhc-btn-ghost"; b.textContent = a.label; b.id = "fhc-act-" + a.id;
+        b.addEventListener("click", () => a.onClick(last.input, last.result, b));
+        act.appendChild(b);
+      });
+      if (o.onResult) o.onResult(input, r, resEl);
+      resEl.scrollIntoView({ behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "start" });
+    }
+
+    // format numbers with commas while typing
+    el.addEventListener("blur", (e) => {
+      const t = e.target;
+      if (t && t.dataset && t.dataset.num && t.value) { const v = n(t.value); t.value = v ? v.toLocaleString("en-US") : ""; }
+    }, true);
+    el.querySelector("#fhc-add-debt").addEventListener("click", () => addDebt());
+    debtsEl.addEventListener("click", (e) => { const i = e.target.dataset && e.target.dataset.del; if (i != null) e.target.closest(".fhc-debt").remove(); });
+    el.querySelector("#fhc-sample").addEventListener("click", () => fill(SAMPLE));
+    el.querySelector("#fhc-reset").addEventListener("click", () => { fill({}); resEl.hidden = true; errEl.hidden = true; });
+    form.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const d = read();
+      const miss = [];
+      if (!d.income) miss.push("รายได้ต่อเดือน");
+      if (!d.expense) miss.push("ค่าใช้จ่ายต่อเดือน");
+      if (!d.consent) miss.push("ช่องยืนยันด้านล่าง");
+      if (miss.length) { errEl.textContent = "กรุณากรอก: " + miss.join(", "); errEl.hidden = false; return; }
+      errEl.hidden = true;
+      if (o.onSubmit) { o.onSubmit(d); return; }
+      show(d);
+    });
+
+    fill(o.initial || {});
+    return { fill, read, show, get last() { return last; } };
+  }
+
+  global.FHC = { calculate, lineSummary, radarSVG, mount, wizard, quickToInput, QUICK, fmt, DEBT_TYPES, WELFARE, SAMPLE };
+})(typeof window !== "undefined" ? window : globalThis);
+
+</script>
+<script>
+(function () {
+  "use strict";
+  const $ = (s, r) => (r || document).querySelector(s);
+  const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+
+  // ---------------- constants ----------------
+  const DEFAULT_FORM = "https://satienpongkham-art.github.io/content-hq/";
+  let FORM_URL = DEFAULT_FORM;
+  const INVITE = () => `สวัสดีครับ 😊 ลองเช็กสุขภาพการเงินฟรีดูนะครับ แค่กดเลือกคำตอบ 12 ข้อ ใช้เวลา 1 นาที ได้คะแนนเต็ม 100 พร้อมสิ่งที่ควรทำก่อน แล้วกดส่งผลกลับมาให้ผมช่วยดูต่อได้เลยครับ\n${FORM_URL}`;
+  const PILLARS = [
+    { t: "Myth Busting / Q&A / ไลฟ์สไตล์", ex: "ความเชื่อผิด ๆ เรื่องเงิน, ตอบคอมเมนต์" },
+    { t: "จัดการเงิน / งบประมาณ", ex: "50/30/20, เงินเดือน 15,000 แบ่งยังไง, กระปุก 6 ใบ" },
+    { t: "เคลียร์หนี้", ex: "Snowball vs Avalanche, หนี้บัตร, รีไฟแนนซ์" },
+    { t: "บริษัทนี้ทำอะไร (Company Story)", ex: "หุ้นไทย/ต่างประเทศ หาเงินจากไหน แบรนด์ใกล้ตัวเป็นของใคร" },
+    { t: "ประกัน & ความเสี่ยง", ex: "เงินสำรองฉุกเฉิน, ประกันสุขภาพ vs ชีวิต, เคลมไม่ได้เพราะอะไร" },
+    { t: "ลงทุนพื้นฐาน & ภาษี", ex: "DCA, กองทุนลดหย่อนภาษี, ดอกเบี้ยทบต้น" },
+    { t: "ข่าว/เทรนด์การเงินสัปดาห์นี้", ex: "เล่าข่าวการเงินให้เข้าใจง่าย" },
+  ];
+  const DAYS = ["อา", "จ", "อ", "พ", "พฤ", "ศ", "ส"];
+  const FORMATS = ["POV", "สเก็ตช์ 2 ตัวละคร (ตัวเราใช้เงินเก่ง vs ใช้เงินเปลือง)", "ถ้ามีเงิน X บาท", "Storytime", "จัดอันดับ Top 3", "คำนวณให้ดู", "Green screen ข่าว", "Before/After"];
+  const SLOTS = [
+    { id: "s1", time: "11:00", min: 660, who: "พักเที่ยง คนทำงาน/แม่บ้าน", cat: "ของใช้ในบ้าน/ครัว" },
+    { id: "s2", time: "17:00", min: 1020, who: "เลิกงาน ระหว่างเดินทาง", cat: "แกดเจ็ต/ไอที" },
+    { id: "s3", time: "19:30", min: 1170, who: "Prime time ช้อปจริง", cat: "แม่และเด็ก/สัตว์เลี้ยง" },
+  ];
+  const CATS = ["ของใช้ในบ้าน/ครัว", "แกดเจ็ต/ไอที", "แม่และเด็ก/สัตว์เลี้ยง"];
+  const RULES = `กฎ: (1) ให้ความรู้การเงิน ไม่ชี้นำ ห้ามบอกให้ซื้อ/ขาย/ถือหุ้นหรือกองทุนใด ห้ามราคาเป้าหมาย ห้ามการันตีผลตอบแทน พูดถึงหุ้นได้แค่ "บริษัทนี้ทำธุรกิจอะไร หาเงินจากไหน" (2) Unit Linked เป็นความรู้ทั่วไปเท่านั้น ต้องบอกว่ามีความเสี่ยง (3) Shopee: เขียนในมุมผู้แนะนำ ห้ามแต่งรีวิวว่าใช้แล้ว ห้ามแต่งคำพูดลูกค้า ห้ามอ้างสรรพคุณเกินข้อมูลที่ให้ ใส่การเปิดเผยว่าเป็นลิงก์ Affiliate (4) ถ้าใช้ตัวเลข/ข้อเท็จจริงที่อาจเปลี่ยนตามเวลา ให้ระบุใน sources_note ว่าต้องเช็กอะไร เพราะคุณค้นเว็บไม่ได้ในหน้านี้`;
+  const TT_SCHEMA = `{"title":"","audience":"","format":"","length_sec":60,"hooks":["hook หลัก","สำรอง1","สำรอง2"],"hook_onscreen":"ข้อความบนจอ 0-3 วิ","scenes":[{"visual":"ภาพ/ท่าทาง","line":"บทพูด","onscreen":"ข้อความบนจอ"}],"punchline":"","cta":"","caption":"ไม่เกิน 150 ตัวอักษร","hashtags":["#..."],"music":"","disclaimer":"","sources_note":"สิ่งที่ต้องเช็กข้อเท็จจริง","log":{"topic":"","angle":"","hook":""}}`;
+  const SP_SCHEMA = (suggested) => `{"product":"ชื่อสินค้า","suggested":${suggested},"search_keywords":["..."],"price_range":"","shop_criteria":"","pain_point":"","formula":"","versions":{"A":"","B":"","C":""},"first_comment":"ข้อความคอมเมนต์แรกที่มีลิงก์","image_idea":"","group_types":["ประเภทกลุ่ม FB ที่เหมาะ"],"group_search":["คีย์เวิร์ดค้นหากลุ่ม"],"log":{"product":"","pain":""}}`;
+  const TT_REFINE = ["ตลกขึ้น", "สั้นลงเหลือ 45 วิ", "Hook แรงขึ้น", "เปลี่ยนมุมเล่าใหม่", "ภาษาวัยรุ่นขึ้น"];
+  const SP_REFINE = ["สั้นลง", "ขายแรงขึ้น", "เป็นกันเองขึ้น", "Pain Point มุมใหม่", "อีโมจิน้อยลง"];
+
+  // ---------------- state ----------------
+  let sample = null, db = null, uid = null;
+  let dayRef = null, day = { tiktok: null, ttUsed: false, slots: {} };
+  let logs = [], fhcApi = null, fhcSaved = [], fhcLoadedId = null;
+
+  // ---------------- helpers ----------------
+  const bkkDate = (d) => new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Bangkok", year: "numeric", month: "2-digit", day: "2-digit" }).format(d || new Date());
+  const thaiLabel = (iso) => new Intl.DateTimeFormat("th-TH", { timeZone: "Asia/Bangkok", weekday: "long", day: "numeric", month: "long", year: "numeric" }).format(new Date(iso + "T12:00:00+07:00"));
+  const weekday = (iso) => new Date(iso + "T12:00:00+07:00").getUTCDay();
+  const daysBetween = (a, b) => Math.round((new Date(b) - new Date(a)) / 86400000);
+  const shiftDate = (iso, n) => { const d = new Date(iso + "T12:00:00+07:00"); d.setUTCDate(d.getUTCDate() + n); return bkkDate(d); };
+  function bkkMinutes() { const p = new Intl.DateTimeFormat("en-GB", { timeZone: "Asia/Bangkok", hour: "2-digit", minute: "2-digit", hour12: false }).format(new Date()).split(":"); return +p[0] * 60 + +p[1]; }
+  let toastT = null;
+  function toast(msg) { const t = $("#toast"); t.textContent = msg; t.classList.add("show"); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove("show"), 1900); }
+  function banner(msg) { const b = $("#banner"); b.textContent = msg; b.hidden = !msg; }
+
+  async function copy(text, okMsg) {
+    try { await navigator.clipboard.writeText(text); toast(okMsg || "คัดลอกแล้ว"); return true; }
+    catch (e) {
+      const ta = document.createElement("textarea"); ta.value = text; ta.style.position = "fixed"; ta.style.opacity = "0"; document.body.appendChild(ta); ta.select();
+      let ok = false; try { ok = document.execCommand("copy"); } catch (_) {}
+      ta.remove(); toast(ok ? okMsg || "คัดลอกแล้ว" : "คัดลอกไม่ได้ ให้เลือกข้อความเอง"); return ok;
+    }
+  }
+  document.addEventListener("click", (e) => {
+    const b = e.target.closest("[data-copy]");
+    if (b) { const src = document.getElementById(b.dataset.copy); if (src) copy(src.dataset.text || src.innerText); }
+  });
+  let cbId = 0;
+  function copyBlock(label, text) {
+    const id = "cb" + ++cbId;
+    return `<div class="copyblock"><div class="lbl"><span>${esc(label)}</span><button class="mini" data-copy="${id}">คัดลอก</button></div><div id="${id}" data-text="${esc(text)}">${esc(text)}</div></div>`;
+  }
+
+  // ---------------- tabs ----------------
+  const tabs = ["home", "today", "fhc", "leads", "lib"];
+  function selectTab(name) {
+    tabs.forEach((t) => { $("#tab-" + t).setAttribute("aria-selected", t === name ? "true" : "false"); $("#p-" + t).hidden = t !== name; });
+    try { localStorage.setItem("hq-tab", name); } catch (e) {}
+    if (name === "lib") renderLib();
+    if (name === "leads") startLeads();
+    if (name === "home") renderHome();
+    window.scrollTo({ top: 0 });
+  }
+  tabs.forEach((t) => $("#tab-" + t).addEventListener("click", () => selectTab(t)));
+  $("#q-today").addEventListener("click", () => selectTab("today"));
+  $("#q-fhc").addEventListener("click", () => selectTab("fhc"));
+
+  // ---------------- AI with live progress ----------------
+  function aiErr(e) {
+    const c = e && e.code;
+    if (c === "not_granted") return "ยังไม่ได้อนุญาตให้หน้านี้ใช้ Claude กดปุ่มอีกครั้งแล้วเลือกอนุญาต";
+    if (c === "rate_limited") return "ใช้ AI ถี่เกินไป รอสักครู่แล้วลองใหม่";
+    if (c === "cancelled") return "ยกเลิกแล้ว";
+    return "AI ตอบไม่สำเร็จ (" + ((e && (e.message || c)) || "ไม่ทราบสาเหตุ") + ") ลองกดใหม่อีกครั้ง";
+  }
+  function parseJSON(text) {
+    const s = text.indexOf("{"), e = text.lastIndexOf("}");
+    if (s < 0 || e < s) throw { message: "AI ไม่ได้ตอบเป็นข้อมูลที่อ่านได้" };
+    return JSON.parse(text.slice(s, e + 1));
+  }
+  async function aiJSON(prompt, box, label) {
+    box.className = "out";
+    box.innerHTML = `<div class="gen"><div class="gen-top"><span>${esc(label)}</span><span class="num" data-n>0 ตัวอักษร</span></div><div class="gen-bar"><i></i></div><p class="gen-tail" data-tail>กำลังคิด…</p></div>`;
+    const nEl = box.querySelector("[data-n]"), tail = box.querySelector("[data-tail]");
+    const r = await sample(prompt, { modelTier: "default", cache: false, onText: (u) => {
+      nEl.textContent = u.text.length.toLocaleString("th-TH") + " ตัวอักษร";
+      const plain = u.text.replace(/[{}\[\]"]/g, " ").replace(/\s+/g, " ").replace(/\b[a-z_]+:/g, "");
+      tail.textContent = plain.slice(-120);
+    } });
+    return parseJSON(r.text);
+  }
+  function recentAvoid(kind, days) {
+    const today = $("#tt-date").value || bkkDate();
+    return logs.filter((l) => l.kind === kind && daysBetween(l.date, today) <= days && daysBetween(l.date, today) >= 0).slice(0, 60);
+  }
+
+  // ---------------- TikTok ----------------
+  function fillPillars() { $("#tt-pillar").innerHTML = PILLARS.map((p, i) => `<option value="${i}">${DAYS[i]} · ${esc(p.t)}</option>`).join(""); }
+  function syncPillar() {
+    const iso = $("#tt-date").value, wd = weekday(iso);
+    $("#tt-pillar").value = String(wd); $("#pillar-pill").textContent = PILLARS[wd].t;
+    $("#today-label").textContent = thaiLabel(bkkDate());
+  }
+  function ttPrompt(extra) {
+    const p = PILLARS[+$("#tt-pillar").value];
+    const avoid = recentAvoid("TT", 30).map((l) => `- ${l.topic} | มุม: ${l.angle} | hook: ${l.hook}`).join("\n") || "(ยังไม่มี)";
+    const aud = $("#tt-aud").value;
+    return `คุณคือทีมเขียนสคริปต์ TikTok ช่องการเงิน/การใช้ชีวิตภาษาไทย เจ้าของช่องเป็นตัวแทนประกันชีวิต โทน: สนุก ตลก เล่าเป็นสตอรี่ ภาษาพูด ยกเรื่องใกล้ตัว แต่ข้อมูลถูกต้อง
+${RULES}
+วันที่: ${thaiLabel($("#tt-date").value)}
+เสาคอนเทนต์: ${p.t} (ตัวอย่างแนว: ${p.ex})
+กลุ่มเป้าหมาย: ${aud === "auto" ? "เลือกหนึ่งกลุ่มที่เหมาะที่สุดจาก First Jobber 22–30 / วัยทำงาน 30–45 / คนมีหนี้-เงินไม่พอใช้ / ฟรีแลนซ์-เจ้าของกิจการเล็ก" : aud}
+หัวข้อที่เจ้าของช่องให้มา: ${$("#tt-topic").value.trim() || "(ไม่มี ให้คิดหัวข้อใหม่ที่ไม่ซ้ำ)"}
+รูปแบบเล่าที่แนะนำวันนี้: ${FORMATS[Math.floor(Math.random() * FORMATS.length)]} (เปลี่ยนได้ถ้าไม่เข้ากับหัวข้อ)
+หัวข้อ/มุม/Hook ที่ใช้ไปแล้ว ห้ามซ้ำ:
+${avoid}
+ความยาวคลิป 45–90 วินาที 4–7 ซีน CTA พาไปที่ "คอมเมนต์คำว่า เช็ก เพื่อรับแบบเช็กสุขภาพการเงินฟรี" ได้ถ้าเข้ากับเนื้อหา
+${extra || ""}
+ตอบเป็น JSON อย่างเดียว ไม่มีข้อความอื่น ตามรูปแบบ:
+${TT_SCHEMA}`;
+  }
+  async function genTikTok(refine) {
+    if (!sample) return;
+    const btn = $("#tt-gen"); btn.disabled = true;
+    const extra = refine && day.tiktok ? `นี่คือสคริปต์เดิม ให้ปรับตามคำสั่ง "${refine}" โดยคงหัวข้อเดิม แล้วตอบสคริปต์ทั้งชุดใหม่:\n${JSON.stringify(day.tiktok)}` : "";
+    try {
+      const r = await aiJSON(ttPrompt(extra), $("#tt-out"), refine ? `กำลังปรับ: ${refine}` : "ทีมเขียนสคริปต์กำลังเขียน");
+      if (!r || !r.scenes) throw { message: "รูปแบบคำตอบไม่ครบ" };
+      day.tiktok = r; day.ttUsed = false;
+      renderTikTok(); saveDay(); toast("สคริปต์พร้อมแล้ว");
+    } catch (e) { $("#tt-out").innerHTML = `<p class="err">${esc(aiErr(e))}</p>`; }
+    btn.disabled = false;
+  }
+  function scriptText(r) {
+    const L = [`🎬 ${r.title}`, `🎯 ${r.audience} | ${r.format} | ${r.length_sec || ""} วิ`, "", `🪝 HOOK: ${r.hooks && r.hooks[0]}`, `ข้อความบนจอ: ${r.hook_onscreen || ""}`, ""];
+    (r.scenes || []).forEach((s, i) => L.push(`ซีน ${i + 1} | ภาพ: ${s.visual}\nพูด: ${s.line}\nบนจอ: ${s.onscreen || "-"}\n`));
+    L.push(`💥 ${r.punchline || ""}`, `📣 CTA: ${r.cta || ""}`, "", `⚠️ ${r.disclaimer || ""}`);
+    return L.join("\n");
+  }
+  function statusPill(state) {
+    return state === "done" ? `<span class="pill good">เสร็จแล้ว</span>` : state === "ready" ? `<span class="pill acc">พร้อมใช้</span>` : `<span class="pill mute">รอสร้าง</span>`;
+  }
+  function renderTikTok() {
+    const out = $("#tt-out"), r = day.tiktok;
+    const state = day.ttUsed ? "done" : r ? "ready" : "todo";
+    $("#tt-status").innerHTML = statusPill(state);
+    $("#tl-tt").classList.toggle("done", state === "done");
+    if (!r) { out.className = "out empty"; out.textContent = "ยังไม่มีสคริปต์ของวันนี้ กด “สร้างสคริปต์” แล้ว AI จะเลี่ยงหัวข้อที่เคยทำแล้ว"; $("#tt-gen").textContent = "สร้างสคริปต์"; return; }
+    $("#tt-gen").textContent = "สร้างใหม่";
+    out.className = "out fade-in";
+    const caption = `${r.caption || ""}\n${(r.hashtags || []).join(" ")}`;
+    out.innerHTML = `
+      <div class="row" style="justify-content:space-between"><h3>${esc(r.title)}</h3><span class="pill mute plain">${esc(r.format || "")} · ${esc(r.length_sec || "")} วิ</span></div>
+      <dl class="kv"><dt>กลุ่มเป้าหมาย</dt><dd>${esc(r.audience)}</dd><dt>Hook หลัก</dt><dd><b>${esc(r.hooks && r.hooks[0])}</b><br><span class="note">บนจอ: ${esc(r.hook_onscreen)}</span></dd>
+      <dt>Hook สำรอง</dt><dd><ol class="hooks">${(r.hooks || []).slice(1).map((h) => `<li>${esc(h)}</li>`).join("")}</ol></dd></dl>
+      <div class="scenes">${(r.scenes || []).map((s, i) => `<div class="scene"><span class="no">ซีน ${i + 1}</span><div><p class="line">${esc(s.line)}</p><p class="meta">ภาพ: ${esc(s.visual)}${s.onscreen ? " · บนจอ: " + esc(s.onscreen) : ""}</p></div></div>`).join("")}</div>
+      <dl class="kv"><dt>Punchline</dt><dd>${esc(r.punchline)}</dd><dt>CTA</dt><dd>${esc(r.cta)}</dd><dt>เพลง/เสียง</dt><dd>${esc(r.music)}</dd><dt>Disclaimer</dt><dd>${esc(r.disclaimer)}</dd><dt>ต้องเช็กข้อมูล</dt><dd class="note">${esc(r.sources_note || "-")}</dd></dl>
+      ${copyBlock("แคปชัน + แฮชแท็ก", caption)}
+      <div class="row">
+        <button class="mini" data-copy="tt-full">คัดลอกสคริปต์ทั้งหมด</button><span id="tt-full" hidden data-text="${esc(scriptText(r))}"></span>
+        <label class="toggle" for="tt-used"><input type="checkbox" id="tt-used" ${day.ttUsed ? "checked" : ""}> ใช้คลิปนี้แล้ว</label>
+      </div>
+      <div class="refine"><span>ปรับด้วย AI</span>${TT_REFINE.map((t) => `<button class="chip-btn" data-ttref="${esc(t)}">${esc(t)}</button>`).join("")}</div>`;
+    $("#tt-used").addEventListener("change", (e) => toggleUsed("TT", "tt", e.target.checked));
+    out.querySelectorAll("[data-ttref]").forEach((b) => b.addEventListener("click", () => genTikTok(b.dataset.ttref)));
+  }
+
+  // ---------------- Shopee ----------------
+  function renderSlotsShell() {
+    $("#slots").innerHTML = SLOTS.map((s) => `
+      <article class="glass tl" id="tl-${s.id}">
+        <div class="tl-dot"><span>${s.time}</span></div>
+        <div class="tl-head">
+          <h3><span class="t">${s.time}</span> Shopee <span class="note" style="font-family:var(--font-body);font-weight:400">${esc(s.who)}</span></h3>
+          <div class="row"><span id="${s.id}-status"></span><label class="toggle" for="${s.id}-posted"><input type="checkbox" id="${s.id}-posted"> โพสต์แล้ว</label></div>
+        </div>
+        <div class="tl-body">
+          <div class="ctl-row">
+            <label class="ctl" for="${s.id}-cat"><span>หมวด</span><select id="${s.id}-cat">${CATS.map((c) => `<option ${c === s.cat ? "selected" : ""}>${c}</option>`).join("")}</select></label>
+            <label class="ctl" for="${s.id}-name"><span>ชื่อสินค้า</span><input id="${s.id}-name" placeholder="เว้นว่าง = AI เสนอให้"></label>
+            <label class="ctl" for="${s.id}-price"><span>ราคา (บาท)</span><input id="${s.id}-price" inputmode="decimal" placeholder="เช่น 199"></label>
+            <label class="ctl" for="${s.id}-link"><span>ลิงก์ Affiliate</span><input id="${s.id}-link" placeholder="https://s.shopee.co.th/..."></label>
+          </div>
+          <div class="ctl-row" style="grid-template-columns:1fr auto">
+            <label class="ctl" for="${s.id}-note"><span>จุดเด่น/โปรจากหน้าสินค้า (ไม่บังคับ)</span><input id="${s.id}-note" placeholder="เช่น ส่งฟรี มีโค้ดลด 20% คะแนน 4.9 ขายแล้ว 10k"></label>
+            <button class="btn" id="${s.id}-gen">เขียนโพสต์</button>
+          </div>
+          <div class="out empty" id="${s.id}-out">ยังไม่มีโพสต์สำหรับช่วงนี้</div>
+        </div>
+      </article>`).join("");
+    SLOTS.forEach((s) => {
+      $(`#${s.id}-gen`).addEventListener("click", () => genSlot(s));
+      $(`#${s.id}-posted`).addEventListener("change", (e) => toggleUsed("SP", s.id, e.target.checked));
+      ["cat", "name", "price", "link", "note"].forEach((k) => $(`#${s.id}-${k}`).addEventListener("change", () => { slotState(s.id).input = readSlot(s.id); saveDay(); }));
+    });
+  }
+  const slotState = (id) => (day.slots[id] = day.slots[id] || { input: {}, output: null, posted: false });
+  function readSlot(id) { const g = (k) => $(`#${id}-${k}`).value.trim(); return { cat: g("cat"), name: g("name"), price: g("price"), link: g("link"), note: g("note") }; }
+  function fillSlot(id) {
+    const st = slotState(id), i = st.input || {};
+    ["name", "price", "link", "note"].forEach((k) => ($(`#${id}-${k}`).value = i[k] || ""));
+    $(`#${id}-cat`).value = i.cat || SLOTS.find((s) => s.id === id).cat;
+    $(`#${id}-posted`).checked = !!st.posted;
+    renderSlot(id);
+  }
+  async function genSlot(s, refine) {
+    if (!sample) return;
+    const st = slotState(s.id); st.input = readSlot(s.id);
+    const btn = $(`#${s.id}-gen`); btn.disabled = true;
+    const i = st.input, hasProduct = !!i.name;
+    const used = recentAvoid("SP", 14).map((l) => `- ${l.topic} (pain: ${l.angle})`).join("\n") || "(ยังไม่มี)";
+    const otherToday = SLOTS.filter((x) => x.id !== s.id).map((x) => (day.slots[x.id] && day.slots[x.id].output && day.slots[x.id].output.product) || "").filter(Boolean).join(", ") || "-";
+    const formula = ["PAS (Problem–Agitate–Solution)", "AIDA", "Before–After–Bridge", "เปิดด้วย 'เคยไหม…'"][Math.floor(Math.random() * 4)];
+    const extra = refine && st.output ? `นี่คือโพสต์เดิม ให้ปรับตามคำสั่ง "${refine}" โดยคงสินค้าเดิม แล้วตอบทั้งชุดใหม่:\n${JSON.stringify(st.output)}` : "";
+    const prompt = `คุณคือทีมเขียนโพสต์ขายของสาย Shopee Affiliate สำหรับโพสต์ลงกลุ่ม Facebook ภาษาไทย หลักการ: Pain Point First เปิดด้วยปัญหาที่คนเจอจริง ขยี้ให้รู้สึก เสนอสินค้าเป็นทางออก (ไม่เกิน 3 จุดเด่น) เหตุผลให้ซื้อตอนนี้เฉพาะที่เป็นจริง แล้ว CTA
+${RULES}
+ช่วงเวลาโพสต์: ${s.time} (${s.who}) หมวด: ${i.cat}
+${hasProduct ? `สินค้า: ${i.name} ราคา: ${i.price || "ไม่ระบุ"} ลิงก์: ${i.link || "[ลิงก์]"} ข้อมูลจากหน้าสินค้า: ${i.note || "-"}` : `ยังไม่มีสินค้า ให้เสนอสินค้า 1 ชนิดที่เหมาะกับหมวดและช่วงเวลานี้ (ประเภทสินค้าทั่วไป ไม่ระบุยี่ห้อ) พร้อมคีย์เวิร์ดค้นใน Shopee ช่วงราคาที่ควรเลือก และเกณฑ์เลือกร้าน ใช้ [ลิงก์] แทนลิงก์ อย่าแต่งราคา/โปรที่ไม่รู้`}
+สินค้าอื่นที่โพสต์วันนี้: ${otherToday}
+สินค้าที่ใช้ไปใน 14 วัน (ถ้าเป็นชิ้นเดิมต้องใช้ Pain Point คนละมุม หรือเสนอชิ้นใหม่):
+${used}
+สูตรหลัก: ${formula}
+ทำ 3 เวอร์ชัน: A สั้นไม่เกิน 3 บรรทัด, B เล่าเรื่องตามสูตร, C ลิสต์จุดเด่น+อีโมจิ ทุกเวอร์ชันลงท้ายด้วยการเปิดเผย เช่น "#ลิงก์แนะนำ (ได้ค่าคอมเล็กน้อย)" และบอกว่าลิงก์อยู่ในคอมเมนต์ (ไม่ใส่ลิงก์ในตัวโพสต์)
+${extra}
+ตอบเป็น JSON อย่างเดียว ไม่มีข้อความอื่น:
+${SP_SCHEMA(!hasProduct)}`;
+    try {
+      const r = await aiJSON(prompt, $(`#${s.id}-out`), refine ? `กำลังปรับ: ${refine}` : `ทีมปักตะกร้ากำลังเขียนโพสต์ ${s.time}`);
+      if (!r || !r.versions) throw { message: "รูปแบบคำตอบไม่ครบ" };
+      if (i.link) r.first_comment = String(r.first_comment || "").replace(/\[ลิงก์\]/g, i.link);
+      st.output = r; st.posted = false; $(`#${s.id}-posted`).checked = false;
+      renderSlot(s.id); saveDay(); toast(`โพสต์ ${s.time} พร้อมแล้ว`);
+    } catch (e) { $(`#${s.id}-out`).innerHTML = `<p class="err">${esc(aiErr(e))}</p>`; }
+    btn.disabled = false;
+  }
+  function renderSlot(id) {
+    const st = slotState(id), r = st.output, out = $(`#${id}-out`);
+    const state = st.posted ? "done" : r ? "ready" : "todo";
+    $(`#${id}-status`).innerHTML = statusPill(state);
+    $(`#tl-${id}`).classList.toggle("done", state === "done");
+    $(`#${id}-gen`).textContent = r ? "เขียนใหม่" : "เขียนโพสต์";
+    if (!r) { out.className = "out empty"; out.textContent = "ยังไม่มีโพสต์สำหรับช่วงนี้"; return; }
+    out.className = "out fade-in";
+    out.innerHTML = `
+      <dl class="kv"><dt>สินค้า</dt><dd><b>${esc(r.product)}</b> ${r.suggested ? '<span class="pill acc">AI เสนอ</span>' : ""}</dd>
+      ${r.suggested ? `<dt>ค้นใน Shopee</dt><dd>${(r.search_keywords || []).map(esc).join(" · ")}<br><span class="note">${esc(r.price_range || "")}${r.shop_criteria ? " · " + esc(r.shop_criteria) : ""}</span></dd>` : ""}
+      <dt>Pain Point</dt><dd>${esc(r.pain_point)}</dd><dt>สูตร</dt><dd>${esc(r.formula)}</dd></dl>
+      <div class="versions">
+        ${copyBlock("เวอร์ชัน A · สั้น", (r.versions && r.versions.A) || "")}
+        ${copyBlock("เวอร์ชัน B · เล่าเรื่อง", (r.versions && r.versions.B) || "")}
+        ${copyBlock("เวอร์ชัน C · ลิสต์จุดเด่น", (r.versions && r.versions.C) || "")}
+        ${copyBlock("คอมเมนต์แรก (ใส่ลิงก์)", r.first_comment || "")}
+      </div>
+      <dl class="kv"><dt>ไอเดียภาพ</dt><dd>${esc(r.image_idea)}</dd><dt>กลุ่มที่เหมาะ</dt><dd>${(r.group_types || []).map(esc).join(" · ")}<br><span class="note">ค้นกลุ่ม: ${(r.group_search || []).map(esc).join(", ")}</span></dd></dl>
+      <p class="note">ก่อนโพสต์: เช็กกฎกลุ่ม · ลิงก์เปิดได้ · ราคาตรงหน้าสินค้า · ข้อความแต่ละกลุ่มไม่ซ้ำกันทั้งหมด · เว้นแต่ละกลุ่ม 10–15 นาที</p>
+      <div class="refine"><span>ปรับด้วย AI</span>${SP_REFINE.map((t) => `<button class="chip-btn" data-spref="${esc(t)}">${esc(t)}</button>`).join("")}</div>`;
+    const s = SLOTS.find((x) => x.id === id);
+    out.querySelectorAll("[data-spref]").forEach((b) => b.addEventListener("click", () => genSlot(s, b.dataset.spref)));
+  }
+
+  // ---------------- logs ----------------
+  async function toggleUsed(kind, key, on) {
+    const date = $("#tt-date").value;
+    if (kind === "TT") { day.ttUsed = on; renderTikTok(); } else { slotState(key).posted = on; renderSlot(key); }
+    saveDay(); renderHome();
+    if (on) toast(kind === "TT" ? "เก็บคลิปเข้าคลังแล้ว" : "บันทึกว่าโพสต์แล้ว");
+    if (!db || !uid) return;
+    const col = db.collection(`data/users/${uid}/logs/items`), id = `${date}_${key}`;
+    try {
+      if (!on) await col.doc(id).delete();
+      else if (kind === "TT" && day.tiktok) {
+        const L = day.tiktok.log || {};
+        await col.doc(id).set({ date, kind, cat: PILLARS[+$("#tt-pillar").value].t, topic: L.topic || day.tiktok.title, angle: L.angle || day.tiktok.format || "", hook: L.hook || (day.tiktok.hooks || [])[0] || "", createdAt: Date.now() });
+      } else if (kind === "SP") {
+        const r = slotState(key).output; if (!r) return;
+        await col.doc(id).set({ date, kind, cat: (slotState(key).input || {}).cat || "", topic: (r.log && r.log.product) || r.product, angle: (r.log && r.log.pain) || r.pain_point || "", hook: SLOTS.find((s) => s.id === key).time, createdAt: Date.now() });
+      }
+    } catch (e) { banner("บันทึกคลังไม่สำเร็จ: " + (e.message || e.code)); }
+  }
+  function renderLib() {
+    const f = $("#lib-filter").value, list = logs.filter((l) => f === "all" || l.kind === f);
+    $("#lib-list").innerHTML = list.length ? list.map((l) => `<div class="item"><span class="d">${esc(l.date)}</span><span class="k"><span class="pill ${l.kind === "TT" ? "acc" : "good"}">${l.kind === "TT" ? "TikTok" : "Shopee"}</span></span><span class="t">${esc(l.topic)}<small>${esc(l.cat)} · ${esc(l.angle)}${l.hook ? " · " + esc(l.hook) : ""}</small></span><button class="mini" data-dellog="${esc(l._id)}">ลบ</button></div>`).join("") : `<p class="empty-row">ยังไม่มีรายการ เปิดสวิตช์ “ใช้แล้ว” หรือ “โพสต์แล้ว” ในหน้างานวันนี้เพื่อเริ่มเก็บ</p>`;
+  }
+  $("#lib-filter").addEventListener("change", renderLib);
+  $("#lib-list").addEventListener("click", async (e) => {
+    const b = e.target.closest("[data-dellog]"); if (!b || !db) return;
+    if (b.dataset.confirm !== "1") { b.dataset.confirm = "1"; b.textContent = "ยืนยันลบ"; return; }
+    try { await db.collection(`data/users/${uid}/logs/items`).doc(b.dataset.dellog).delete(); toast("ลบแล้ว"); } catch (err) { banner("ลบไม่สำเร็จ"); }
+  });
+
+  // ---------------- home / overview ----------------
+  function doneFlags() { return [!!day.ttUsed].concat(SLOTS.map((s) => !!(day.slots[s.id] && day.slots[s.id].posted))); }
+  function renderHome() {
+    const today = bkkDate(), hour = Math.floor(bkkMinutes() / 60);
+    $("#hello-eyebrow").textContent = thaiLabel(today);
+    $("#hello").innerHTML = `${hour < 12 ? "อรุณสวัสดิ์" : hour < 17 ? "สวัสดีตอนบ่าย" : "สวัสดีตอนเย็น"} <em>วันนี้มีงาน 4 อย่าง</em>`;
+    // ring
+    const isToday = $("#tt-date").value === today;
+    const flags = isToday ? doneFlags() : [false, false, false, false];
+    const n = flags.filter(Boolean).length;
+    $("#ring-num").textContent = n;
+    $("#ring-bar").setAttribute("stroke-dashoffset", String(314.16 * (1 - n / 4)));
+    const names = ["คลิป TikTok", "Shopee 11:00", "Shopee 17:00", "Shopee 19:30"];
+    $("#ring-checks").innerHTML = names.map((t, i) => `<li class="${flags[i] ? "done" : ""}">${t}</li>`).join("");
+    // next slot
+    const m = bkkMinutes();
+    const pending = SLOTS.filter((s, i) => !flags[i + 1]);
+    const next = pending.find((s) => s.min >= m - 30) || null;
+    if (next) {
+      const diff = next.min - m;
+      $("#next-time").textContent = next.time;
+      $("#next-what").textContent = `โพสต์ Shopee · ${next.cat}`;
+      $("#next-cd").textContent = diff > 0 ? `อีก ${Math.floor(diff / 60) ? Math.floor(diff / 60) + " ชม. " : ""}${diff % 60} นาที` : "ถึงเวลาแล้ว";
+    } else if (!flags[0]) {
+      $("#next-time").textContent = "TikTok"; $("#next-what").textContent = "ยังไม่ได้ใช้คลิปของวันนี้"; $("#next-cd").textContent = "";
+    } else {
+      $("#next-time").textContent = "✓"; $("#next-what").textContent = pending.length ? "เลยเวลาโพสต์แล้ว ยังโพสต์ย้อนหลังได้" : "งานวันนี้ครบแล้ว"; $("#next-cd").textContent = "";
+    }
+    // week chart
+    const days = [...Array(7)].map((_, i) => shiftDate(today, i - 6));
+    const counts = days.map((d) => ({ d, tt: logs.filter((l) => l.date === d && l.kind === "TT").length, sp: logs.filter((l) => l.date === d && l.kind === "SP").length }));
+    const W = 420, H = 150, pad = 22, bw = 30, max = 4;
+    const x = (i) => pad + i * ((W - pad * 2) / 6);
+    let svg = `<svg viewBox="0 0 ${W} ${H + 24}" role="img" aria-label="งานที่ทำ 7 วันล่าสุด">`;
+    [0, 2, 4].forEach((v) => { const y = H - (v / max) * (H - 20); svg += `<line class="grid" x1="0" x2="${W}" y1="${y}" y2="${y}"/>`; });
+    counts.forEach((c, i) => {
+      const hTT = (c.tt / max) * (H - 20), hSP = (c.sp / max) * (H - 20), cx = x(i);
+      if (c.sp) svg += `<rect x="${cx - bw / 2}" y="${H - hSP}" width="${bw}" height="${hSP}" rx="6" fill="#62e2c6" fill-opacity=".85"/>`;
+      if (c.tt) svg += `<rect x="${cx - bw / 2}" y="${H - hSP - hTT - (c.sp ? 3 : 0)}" width="${bw}" height="${hTT}" rx="6" fill="url(#ringGrad)"/>`;
+      if (!c.tt && !c.sp) svg += `<rect x="${cx - bw / 2}" y="${H - 4}" width="${bw}" height="4" rx="2" fill="#ffffff" fill-opacity=".08"/>`;
+      if (c.tt + c.sp) svg += `<text class="val" x="${cx}" y="${H - hSP - hTT - 8}" text-anchor="middle">${c.tt + c.sp}</text>`;
+      svg += `<text class="lbl" x="${cx}" y="${H + 18}" text-anchor="middle">${DAYS[weekday(c.d)]}${c.d === today ? " •" : ""}</text>`;
+    });
+    $("#week-chart").innerHTML = svg + "</svg>";
+    const wtt = counts.reduce((s, c) => s + c.tt, 0), wsp = counts.reduce((s, c) => s + c.sp, 0);
+    $("#week-sum").innerHTML = `<span style="color:var(--accent)">■</span> TikTok ${wtt}/7 · <span style="color:var(--mint)">■</span> Shopee ${wsp}/21`;
+    // stats
+    let streak = 0; let d = today;
+    if (!logs.some((l) => l.date === d)) d = shiftDate(d, -1);
+    while (logs.some((l) => l.date === d)) { streak++; d = shiftDate(d, -1); }
+    $("#st-streak").textContent = streak;
+    $("#st-tt").textContent = logs.filter((l) => l.kind === "TT").length;
+    $("#st-sp").textContent = logs.filter((l) => l.kind === "SP").length;
+    $("#st-fhc").textContent = fhcSaved.length;
+    // fhc recent
+    if (fhcSaved.length) {
+      const avg = Math.round(fhcSaved.reduce((s, x) => s + (x.score || 0), 0) / fhcSaved.length);
+      $("#home-fhc").innerHTML = `<p class="note">คะแนนเฉลี่ย <b class="num" style="color:var(--fg)">${avg}</b>/100</p>` + fhcSaved.slice(0, 4).map((x) => `<div class="row" style="justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--stroke)"><span>${esc(x.name)} <span class="note">${esc(x.date)}</span></span><span class="pill ${x.score >= 60 ? "good" : x.score >= 40 ? "warn" : "mute"}">${x.score}</span></div>`).join("");
+    }
+  }
+
+  // ---------------- form link ----------------
+  function setFormUrl(u) {
+    FORM_URL = (u || "").trim();
+    $("#form-url").textContent = FORM_URL || "ยังไม่ได้ตั้งค่าลิงก์ฟอร์ม";
+    $("#form-url-in").value = FORM_URL;
+    $("#open-url").href = FORM_URL || "#";
+    $("#open-url").hidden = !FORM_URL;
+    drawQR();
+  }
+  const needUrl = () => { if (!FORM_URL) { toast("ยังไม่มีลิงก์ฟอร์ม วางลิงก์ก่อนนะ"); return true; } return false; };
+  $("#copy-url").addEventListener("click", () => { if (!needUrl()) copy(FORM_URL, "คัดลอกลิงก์แล้ว"); });
+  $("#copy-invite").addEventListener("click", () => { if (!needUrl()) copy(INVITE(), "คัดลอกข้อความชวนแล้ว"); });
+  $("#q-copy-link").addEventListener("click", () => { if (!needUrl()) copy(INVITE(), "คัดลอกข้อความชวนลูกค้าแล้ว"); });
+  $("#form-url-save").addEventListener("click", async () => {
+    const u = $("#form-url-in").value.trim();
+    if (u && !/^https:\/\//.test(u)) { toast("ลิงก์ต้องขึ้นต้นด้วย https://"); return; }
+    setFormUrl(u);
+    if (db && uid) { try { await db.collection(`data/users/${uid}`).doc("settings").set({ formUrl: u, updatedAt: Date.now() }); toast("บันทึกลิงก์แล้ว"); } catch (e) { toast("บันทึกลิงก์ไม่สำเร็จ"); } }
+    else toast("ใช้ลิงก์นี้ชั่วคราว (ต้องเปิดใน claude.ai เพื่อจำค่า)");
+  });
+  function drawQR() {
+    const el = $("#qr");
+    if (!FORM_URL) { el.innerHTML = `<span style="color:#0d1330;font-size:12px;text-align:center;line-height:1.4">วางลิงก์ฟอร์ม<br>แล้ว QR จะขึ้นที่นี่</span>`; return; }
+    try { if (window.QRCode) { el.innerHTML = ""; new QRCode(el, { text: FORM_URL, width: 112, height: 112, colorDark: "#0d1330", colorLight: "#ffffff", correctLevel: QRCode.CorrectLevel.M }); return; } } catch (e) {}
+    el.innerHTML = `<span style="color:#0d1330;font-size:12px;text-align:center">QR โหลดไม่ได้<br>ใช้ลิงก์แทน</span>`;
+  }
+
+  // ---------------- day persistence ----------------
+  let saveT = null;
+  function saveDay() {
+    if (!dayRef) return;
+    clearTimeout(saveT);
+    saveT = setTimeout(() => dayRef.set(JSON.parse(JSON.stringify(day))).catch((e) => banner("บันทึกงานวันนี้ไม่สำเร็จ: " + (e.message || e.code))), 600);
+  }
+  async function loadDay() {
+    const date = $("#tt-date").value;
+    day = { tiktok: null, ttUsed: false, slots: {} };
+    if (db && uid) {
+      dayRef = db.collection(`data/users/${uid}/days/items`).doc(date);
+      try { const snap = await dayRef.get(); if (snap.exists) day = Object.assign(day, snap.data()); } catch (e) {}
+    }
+    renderTikTok(); SLOTS.forEach((s) => fillSlot(s.id)); renderHome();
+  }
+
+  // ---------------- FHC owner ----------------
+  let wz = null;
+  function setFhcMode(m) {
+    $("#fm-quick").setAttribute("aria-pressed", String(m === "quick"));
+    $("#fm-detail").setAttribute("aria-pressed", String(m === "detail"));
+    $("#fhc-quick").hidden = m !== "quick"; $("#fhc-root").hidden = m !== "detail";
+  }
+  $("#fm-quick").addEventListener("click", () => { setFhcMode("quick"); wz.reset({}); fhcLoadedId = null; });
+  $("#fm-detail").addEventListener("click", () => setFhcMode("detail"));
+  function mountFHC() {
+    wz = FHC.wizard($("#fhc-quick"), {
+      mode: "owner",
+      consentText: "ลูกค้ายินยอมให้เก็บข้อมูลนี้เพื่อใช้วางแผนการเงิน (PDPA)",
+      onDone: (input) => { setFhcMode("detail"); fhcApi.fill(input); fhcApi.show(input); },
+      onDetail: (input) => { setFhcMode("detail"); fhcApi.fill(input); },
+    });
+    fhcApi = FHC.mount($("#fhc-root"), {
+      mode: "owner",
+      actions: [
+        { id: "line", label: "คัดลอกสรุปส่ง LINE", primary: true, onClick: (inp, r) => copy(FHC.lineSummary(inp, r), "คัดลอกสรุปแล้ว") },
+        { id: "ai", label: "ให้ AI เขียนข้อความถึงลูกค้า", onClick: (inp, r, b) => fhcAI(inp, r, b) },
+        { id: "save", label: "บันทึกลูกค้า", onClick: (inp, r, b) => fhcSave(inp, r, b) },
+      ],
+      onResult: () => { $("#fhc-ai").hidden = true; },
+    });
+  }
+  async function fhcAI(inp, r, b) {
+    if (!sample) { toast("ต้องเปิดใน claude.ai เพื่อใช้ AI"); return; }
+    b.disabled = true; const box = $("#fhc-ai"); box.hidden = false;
+    const prompt = `คุณช่วยตัวแทนประกันชีวิตเขียนข้อความสรุปผล Financial Health Check ส่งลูกค้าทาง LINE ภาษาไทย สุภาพ อบอุ่น เข้าใจง่าย ไม่กดดันขาย ไม่เกิน 180 คำ เริ่มด้วยชื่นชมจุดที่ทำได้ดี 1 ข้อ แล้วบอกจุดที่ควรดูแล 2–3 ข้อพร้อมสิ่งที่ทำได้ทันที ถ้ามีช่องว่างความคุ้มครองให้ชวนนัดคุยต่อแบบเบา ๆ ปิดด้วย "ผลประเมินเบื้องต้น ไม่ใช่คำแนะนำการลงทุน"
+${RULES}
+ชื่อลูกค้า: ${inp.name || "คุณลูกค้า"} อายุ: ${inp.age || "-"} คนที่ต้องดูแล: ${inp.dependents || 0} เป้าหมาย: ${inp.goal || "-"}
+คะแนน: ${r.score}/100 (${r.level.t})
+${r.metrics.map((m) => `${m.name}: ${m.value} (เกณฑ์ ${m.target}) สถานะ ${m.status}`).join("\n")}
+จุดเสี่ยง: ${r.allRisks.join(" / ") || "ไม่มี"}
+ตอบเป็นข้อความพร้อมส่งเท่านั้น`;
+    box.innerHTML = `<div class="gen"><div class="gen-top"><span>กำลังเขียนข้อความถึงลูกค้า</span></div><div class="gen-bar"><i></i></div><p class="gen-tail" style="direction:ltr;white-space:pre-wrap;overflow:visible" data-live></p></div>`;
+    try {
+      const res = await sample(prompt, { modelTier: "default", onText: (u) => { const l = box.querySelector("[data-live]"); if (l) l.textContent = u.text; } });
+      box.innerHTML = copyBlock("ข้อความพร้อมส่ง LINE", res.text);
+    } catch (e) { box.innerHTML = `<p class="err">${esc(aiErr(e))}</p>`; }
+    b.disabled = false;
+  }
+  async function fhcSave(inp, r, b) {
+    if (!db || !uid) { toast("ต้องเปิดใน claude.ai เพื่อบันทึก"); return; }
+    if (!inp.consent) { toast("ต้องติ๊กยินยอม PDPA ก่อนบันทึก"); return; }
+    b.disabled = true;
+    const col = db.collection(`data/users/${uid}/fhc/items`);
+    const data = { input: inp, score: r.score, level: r.level.t, name: inp.name || "ไม่ระบุชื่อ", date: bkkDate(), updatedAt: Date.now() };
+    try { if (fhcLoadedId) await col.doc(fhcLoadedId).set(data); else { const ref = await col.add(data); fhcLoadedId = ref.id; } toast("บันทึกลูกค้าแล้ว"); }
+    catch (e) { toast("บันทึกไม่สำเร็จ"); }
+    b.disabled = false;
+  }
+  function renderSaved() {
+    $("#fhc-saved-wrap").hidden = !fhcSaved.length;
+    $("#fhc-saved").innerHTML = fhcSaved.map((x) => `<div class="item"><span class="d">${esc(x.date)}</span><span class="k"><span class="pill ${x.score >= 60 ? "good" : x.score >= 40 ? "warn" : "mute"}">${x.score}/100</span></span><span class="t">${esc(x.name)}<small>${esc(x.level)}</small></span><span class="row"><button class="mini" data-load="${esc(x._id)}">เปิด</button><button class="mini" data-delfhc="${esc(x._id)}">ลบ</button></span></div>`).join("");
+  }
+  $("#fhc-saved").addEventListener("click", async (e) => {
+    const b = e.target.closest("button"); if (!b) return; const t = b.dataset;
+    if (t.load) { const x = fhcSaved.find((y) => y._id === t.load); if (x) { setFhcMode("detail"); fhcLoadedId = x._id; fhcApi.fill(x.input); fhcApi.show(x.input); } }
+    if (t.delfhc) {
+      if (t.confirm !== "1") { b.dataset.confirm = "1"; b.textContent = "ยืนยันลบ"; return; }
+      try { await db.collection(`data/users/${uid}/fhc/items`).doc(t.delfhc).delete(); if (fhcLoadedId === t.delfhc) fhcLoadedId = null; toast("ลบแล้ว"); } catch (err) { banner("ลบไม่สำเร็จ"); }
+    }
+  });
+  $("#fhc-root").addEventListener("click", (e) => { if (e.target.id === "fhc-reset") fhcLoadedId = null; });
+
+
+  // ---------------- Leads dashboard (Google Drive → FHC Leads sheet) ----------------
+  const LEADS_FILE = "19radMg0e0tzIqdeXywuRYZnS-1UDnaaelL0lXDKssWg";
+  const DRIVE = "Google Drive";
+  let mcp = null, leadsUnsub = null, leadsData = null, leadFilter = "all";
+  function ldState(html) { const el = $("#ld-state"); el.innerHTML = html; el.hidden = !html; }
+  function parseSheets(text) {
+    const out = {};
+    String(text || "").split(/^### Sheet Name:\s*/m).slice(1).forEach((sec) => {
+      const name = sec.split("\n")[0].trim();
+      const rows = sec.split("\n").filter((l) => /^\s*\|/.test(l) && !/^\s*\|(\s*:?-+:?\s*\|)+\s*$/.test(l))
+        .map((l) => l.trim().replace(/^\|/, "").replace(/\|$/, "").split("|").map((c) => c.trim()))
+        .filter((r) => r.some((c) => c !== ""));
+      out[name] = rows;
+    });
+    return out;
+  }
+  function resultText(res) {
+    const p = res && res.payload;
+    if (p && typeof p === "object" && p.fileContent) return p.fileContent;
+    const t = ((res && res.content) || []).filter((b) => b.type === "text").map((b) => b.text).join("\n");
+    try { const j = JSON.parse(t); if (j && j.fileContent) return j.fileContent; } catch (e) {}
+    return t;
+  }
+  function onLeads(ev) {
+    if (ev.type === "error") {
+      const c = ev.error && ev.error.code;
+      if (!leadsData) ldState(c === "not_granted" || c === "server_not_connected"
+        ? `<p>ต้องอนุญาตให้หน้านี้อ่าน Google Drive ก่อน</p><p class="note">กดปุ่มรีเฟรชแล้วเลือกอนุญาต หรือเชื่อม Google Drive (บัญชี teamgrowwithuss) ในหน้าตั้งค่า Connectors ของ claude.ai</p>`
+        : `<p class="err">อ่านข้อมูลจาก Google Sheet ไม่สำเร็จ (${esc(c || "error")})</p><p class="note">ลองกดรีเฟรชอีกครั้ง</p>`);
+      return;
+    }
+    const sheets = parseSheets(resultText(ev.result));
+    const sum = {}; (sheets["HQ_Summary"] || []).slice(1).forEach((r) => (sum[r[0]] = r[1]));
+    const leadRows = sheets["HQ_Leads"] || [];
+    const head = leadRows[0] || [];
+    const idx = (h) => head.indexOf(h);
+    const leads = leadRows.slice(1).map((r) => ({ time: r[idx("เวลา")], name: r[idx("ชื่อ")], contact: r[idx("ติดต่อ")], score: +r[idx("คะแนน")] || 0, level: r[idx("ระดับ")], lead: r[idx("Lead")], income: r[idx("รายได้")], dep: r[idx("คนที่ดูแล")], type: r[idx("ลักษณะรายได้")], weak: r[idx("จุดที่ควรดูแล")] || "" }));
+    if (!sheets["HQ_Summary"] && !leads.length) { ldState(`<p>ยังไม่พบข้อมูลในชีต</p><p class="note">เมื่อมีคนกรอกฟอร์ม ข้อมูลจะขึ้นที่นี่อัตโนมัติ</p>`); return; }
+    leadsData = { sum, leads, cachedAt: ev.result && ev.result.cache && ev.result.cache.storedAt };
+    ldState(""); $("#ld-body").hidden = false; renderLeads();
+  }
+  function renderLeads() {
+    if (!leadsData) return;
+    const { sum, leads } = leadsData, n = (k) => +sum[k] || 0;
+    $("#ld-total").textContent = n("ทั้งหมด") || leads.length;
+    $("#ld-avg").textContent = n("คะแนนเฉลี่ย");
+    $("#ld-hot").textContent = n("Lead:Hot"); $("#ld-warm").textContent = n("Lead:Warm"); $("#ld-cold").textContent = n("Lead:Cold");
+    $("#ld-today").textContent = `วันนี้ ${n("วัน:" + bkkDate())} คน`;
+    $("#ld-updated").textContent = sum["อัปเดต"] ? `อัปเดตชีต ${sum["อัปเดต"]}` : "";
+    // 14-day chart
+    const days = Object.keys(sum).filter((k) => k.indexOf("วัน:") === 0).sort();
+    const vals = days.map((k) => +sum[k] || 0), max = Math.max(4, ...vals);
+    const W = 560, H = 140, pad = 16, step = (W - pad * 2) / Math.max(1, days.length - 1), bw = Math.min(22, step * 0.6);
+    let svg = `<svg viewBox="0 0 ${W} ${H + 24}" role="img" aria-label="จำนวนคนกรอก 14 วันล่าสุด">`;
+    [0.5, 1].forEach((f) => { const y = H - f * (H - 18); svg += `<line class="grid" x1="0" x2="${W}" y1="${y}" y2="${y}"/>`; });
+    days.forEach((k, i) => {
+      const v = vals[i], h = (v / max) * (H - 18), x = pad + i * step;
+      svg += v ? `<rect x="${x - bw / 2}" y="${H - h}" width="${bw}" height="${h}" rx="5" fill="url(#ringGrad)"/><text class="val" x="${x}" y="${H - h - 6}" text-anchor="middle">${v}</text>` : `<rect x="${x - bw / 2}" y="${H - 3}" width="${bw}" height="3" rx="1.5" fill="#ffffff" fill-opacity=".08"/>`;
+      if (i % 2 === days.length % 2 || i === days.length - 1) svg += `<text class="lbl" x="${x}" y="${H + 17}" text-anchor="middle">${k.slice(-2)}</text>`;
+    });
+    $("#ld-chart").innerHTML = svg + "</svg>";
+    $("#ld-14sum").textContent = `รวม ${vals.reduce((a, b) => a + b, 0)} คน`;
+    // weak points
+    const weak = Object.keys(sum).filter((k) => k.indexOf("จุดอ่อน:") === 0).map((k) => [k.slice(8), +sum[k] || 0]).sort((a, b) => b[1] - a[1]);
+    const wmax = Math.max(1, ...weak.map((w) => w[1]));
+    $("#ld-weak").innerHTML = weak.map(([t, v]) => `<div class="ld-bar"><span>${esc(t)}</span><i style="--w:${(v / wmax) * 100}%"></i><b class="num">${v}</b></div>`).join("");
+    // list
+    const list = leads.filter((l) => leadFilter === "all" || l.lead === leadFilter);
+    const pill = (t) => t === "Hot" ? `<span class="pill warn">🔥 Hot</span>` : t === "Warm" ? `<span class="pill acc">🌤 Warm</span>` : `<span class="pill mute">❄️ Cold</span>`;
+    $("#ld-list").innerHTML = list.length ? list.map((l, i) => `<div class="item ld-item"><span class="d">${esc(l.time)}</span><span class="k">${pill(l.lead)}</span><span class="t"><b>${esc(l.name)}</b> · <span class="num">${l.score}</span>/100 ${esc(l.level)}<small>${esc(l.income)} · ดูแล ${esc(l.dep)} · ${esc(l.type)}${l.weak ? " · ควรดูแล: " + esc(l.weak) : ""}</small>${l.contact ? `<small>ติดต่อ: <b>${esc(l.contact)}</b></small>` : ""}</span><span class="row">${l.contact ? `<button class="mini" data-ldcopy="${i}">คัดลอกเบอร์/ID</button>` : ""}<button class="mini" data-ldmsg="${i}">ข้อความทักกลับ</button></span></div>`).join("") : `<p class="empty-row">ยังไม่มี Lead ในกลุ่มนี้</p>`;
+    $("#ld-list").dataset.filter = leadFilter;
+    $("#ld-list")._list = list;
+  }
+  $("#ld-list").addEventListener("click", (e) => {
+    const b = e.target.closest("button"); if (!b) return; const list = $("#ld-list")._list || [];
+    if (b.dataset.ldcopy != null) copy(list[+b.dataset.ldcopy].contact, "คัดลอกช่องทางติดต่อแล้ว");
+    if (b.dataset.ldmsg != null) {
+      const l = list[+b.dataset.ldmsg];
+      const weak = l.weak ? l.weak.split(",").map((x) => x.trim()).filter(Boolean) : [];
+      const msg = `สวัสดีครับ${l.name && l.name !== "ไม่ระบุชื่อ" ? "คุณ" + l.name : ""} 😊 ผม Satienpong ที่ปรึกษาการเงินนะครับ ขอบคุณที่ลองเช็กสุขภาพการเงินครับ\nคะแนนที่ได้คือ ${l.score}/100 (${l.level})${weak.length ? `\nจุดที่น่าดูแลก่อนคือ ${weak.join(", ")} ผมมีวิธีเริ่มง่าย ๆ ที่ทำได้ทันทีครับ` : "\nภาพรวมดีมากเลยครับ"}\nถ้าสะดวก ขอนัดคุยสั้น ๆ 15 นาที ช่วยวางแผนให้ฟรี ไม่มีค่าใช้จ่ายครับ`;
+      copy(msg, "คัดลอกข้อความทักกลับแล้ว");
+    }
+  });
+  $("#ld-filter").addEventListener("click", (e) => {
+    const b = e.target.closest("[data-f]"); if (!b) return; leadFilter = b.dataset.f;
+    $("#ld-filter").querySelectorAll("button").forEach((x) => x.setAttribute("aria-pressed", String(x === b))); renderLeads();
+  });
+  async function startLeads() {
+    if (leadsUnsub) return;
+    if (!window.claude || !window.claude.use) { ldState(`<p>เปิดหน้านี้ใน claude.ai เพื่อดู Lead จาก Google Sheet</p>`); return; }
+    if (!leadsData) ldState(`<span class="thinking">กำลังดึงข้อมูลจาก Google Sheet…</span>`);
+    mcp = mcp || (await claude.use("mcp"));
+    if (!mcp) { ldState(`<p>หน้านี้ยังเชื่อม Google Drive ไม่ได้</p><p class="note">ตรวจว่าเชื่อม Google Drive ใน claude.ai แล้ว</p>`); return; }
+    leadsUnsub = mcp.watchTool(DRIVE, "read_file_content", { fileId: LEADS_FILE }, onLeads, { cache: { staleTime: 60000 }, refetchInterval: 300000 });
+  }
+  $("#ld-refresh").addEventListener("click", async () => {
+    if (!mcp) { leadsUnsub = null; startLeads(); return; }
+    try { await mcp.invalidate(DRIVE, "read_file_content"); } catch (e) {}
+    if (!leadsUnsub) startLeads();
+    toast("กำลังรีเฟรช Lead");
+  });
+
+  // ---------------- boot ----------------
+  fillPillars();
+  $("#tt-date").value = bkkDate();
+  syncPillar();
+  $("#tt-date").addEventListener("change", () => { syncPillar(); loadDay(); });
+  $("#tt-pillar").addEventListener("change", () => ($("#pillar-pill").textContent = PILLARS[+$("#tt-pillar").value].t));
+  $("#tt-gen").addEventListener("click", () => genTikTok());
+  $("#sp-all").addEventListener("click", async () => { for (const s of SLOTS) await genSlot(s); });
+  renderSlotsShell();
+  renderTikTok(); SLOTS.forEach((s) => renderSlot(s.id));
+  mountFHC(); renderHome(); setFormUrl(DEFAULT_FORM);
+  setInterval(renderHome, 30000);
+  try { const t = localStorage.getItem("hq-tab"); if (t && tabs.includes(t)) selectTab(t); } catch (e) {}
+
+  function disableAI() {
+    ["#tt-gen", "#sp-all"].concat(SLOTS.map((s) => `#${s.id}-gen`)).forEach((q) => { const b = $(q); if (b) { b.disabled = true; b.title = "ต้องเปิดใน claude.ai"; } });
+  }
+  (async function connect() {
+    if (!window.claude || !window.claude.use) { banner("เปิดหน้านี้ใน claude.ai เพื่อใช้ AI และบันทึกข้อมูล (FHC ใช้คำนวณได้เลย)"); disableAI(); return; }
+    const [s, d, u] = await Promise.all([claude.use("sample"), claude.use("db"), claude.use("user")]);
+    sample = s; db = d;
+    if (!sample) disableAI();
+    if (u) { try { uid = await u.id(); } catch (e) {} }
+    if (!db || !uid) { banner("ยังเชื่อมฐานข้อมูลไม่ได้ ระบบจะไม่จำงานและคลัง ลองเข้าสู่ระบบ claude.ai แล้วเปิดใหม่"); return; }
+    db.collection(`data/users/${uid}`).doc("settings").onSnapshot((snap) => { const v = snap.exists && snap.data(); if (v && typeof v.formUrl === "string") setFormUrl(v.formUrl); }, () => {});
+    db.collection(`data/users/${uid}/logs/items`).orderBy("date", "desc").limit(400).onSnapshot((snap) => {
+      logs = snap.docs.map((x) => Object.assign({ _id: x.id }, x.data()));
+      renderHome(); if (!$("#p-lib").hidden) renderLib();
+    }, () => {});
+    db.collection(`data/users/${uid}/fhc/items`).orderBy("updatedAt", "desc").limit(100).onSnapshot((snap) => {
+      fhcSaved = snap.docs.map((x) => Object.assign({ _id: x.id }, x.data())); renderSaved(); renderHome();
+    }, () => {});
+    loadDay();
+  })();
+})();
+</script>
