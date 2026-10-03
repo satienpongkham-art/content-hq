@@ -1,0 +1,6 @@
+.clasp.json
+appsscript.backup.json
+src/base.css
+node_modules/
+.DS_Store
+*.log

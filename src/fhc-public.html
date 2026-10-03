@@ -1,0 +1,332 @@
+<!doctype html>
+<html lang="th">
+<head>
+<base target="_top">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>เช็กสุขภาพการเงินฟรี</title>
+<meta name="description" content="เช็กสุขภาพการเงินฟรีใน 1 นาที ได้คะแนนเต็ม 100 พร้อมแผนดูแลการเงิน">
+<meta name="theme-color" content="#fff4ee">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Mali:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: one soft card at a time (max 560px). Intro → quick wizard (tap-only, auto-advance) → result cards.
+   Detail mode = one grouped number form. Deliberately single light pastel world. Font: Mali throughout. */
+:root {
+  --cream: #fff4ee;
+  --paper: #ffffff;
+  --ink: #3e2a3f;
+  --muted: #86707f;
+  --line: #f1dfe3;
+  --pink: #ff7fa8;
+  --pink-deep: #e2557f;
+  --pink-soft: #ffe4ec;
+  --mint: #3fbf9c;
+  --mint-soft: #dbf6ed;
+  --lav: #9f88ff;
+  --lav-soft: #eee8ff;
+  --butter-soft: #fff3cf;
+  --butter-ink: #8d6200;
+  --line-green: #06c755;
+  --font: "Mali", "IBM Plex Sans Thai Looped", system-ui, sans-serif;
+  color-scheme: light;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; min-height: 100%; }
+[hidden] { display: none !important; }
+body {
+  background: var(--cream);
+  background-image:
+    radial-gradient(circle at 10% 6%, rgba(255, 127, 168, .22), transparent 32%),
+    radial-gradient(circle at 94% 16%, rgba(159, 136, 255, .2), transparent 30%),
+    radial-gradient(circle at 70% 98%, rgba(63, 191, 156, .18), transparent 34%),
+    radial-gradient(rgba(226, 85, 127, .08) 1.2px, transparent 1.4px);
+  background-size: auto, auto, auto, 22px 22px;
+  background-attachment: fixed;
+  color: var(--ink); font-family: var(--font); font-size: 16px; line-height: 1.7;
+  -webkit-font-smoothing: antialiased;
+}
+h1, h2, h3 { font-weight: 600; line-height: 1.35; margin: 0; text-wrap: balance; }
+p { margin: 0; }
+button, input, select, textarea { font: inherit; color: inherit; }
+:focus-visible { outline: 3px solid var(--lav); outline-offset: 2px; }
+.wrap { max-width: 560px; margin: 0 auto; padding-inline: 16px; padding-block: calc(22px + env(safe-area-inset-top, 0px)) calc(56px + env(safe-area-inset-bottom, 0px)); }
+
+.hdr { text-align: center; display: grid; gap: 6px; justify-items: center; margin-bottom: 22px; }
+.sticker { display: inline-block; font-size: 13px; font-weight: 500; padding: 3px 14px; border-radius: 999px; background: var(--butter-soft); color: var(--butter-ink); border: 2px dashed #ffd97a; transform: rotate(-2deg); }
+.hdr h1 { font-size: clamp(28px, 7.5vw, 38px); font-weight: 700; }
+.hdr h1 span { color: var(--pink-deep); }
+.hdr p { color: var(--muted); }
+
+.card { background: var(--paper); border-radius: 28px; padding: 24px 22px; border: 2px solid var(--line); box-shadow: 0 10px 0 -4px var(--pink-soft), 0 24px 40px -30px rgba(226, 85, 127, .5); display: grid; gap: 16px; }
+.pop { animation: pop .38s cubic-bezier(.3, 1.4, .5, 1) both; }
+@keyframes pop { from { opacity: .001; transform: translateY(10px) scale(.985); } to { opacity: 1; transform: none; } }
+
+.modes { display: grid; gap: 12px; }
+.mode { text-align: left; border: 2px solid var(--line); background: var(--paper); border-radius: 22px; padding: 16px 18px; cursor: pointer; display: grid; gap: 2px; transition: transform .15s, border-color .15s, box-shadow .15s; }
+.mode:hover { transform: translateY(-2px); border-color: var(--pink); }
+.mode b { font-size: 19px; font-weight: 600; }
+.mode span { color: var(--muted); font-size: 14px; }
+.mode.main { background: var(--pink-soft); border-color: var(--pink); box-shadow: 0 6px 0 -2px #ffc3d4; }
+.mode.main b { color: var(--pink-deep); }
+.badge { justify-self: start; font-size: 12px !important; font-weight: 600; color: #fff !important; background: var(--pink); border-radius: 99px; padding: 0 10px; margin-bottom: 4px; }
+.trust { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px 16px; font-size: 13px; color: var(--muted); }
+.trust span::before { content: "✓ "; color: var(--mint); font-weight: 700; }
+
+.wz { display: grid; gap: 14px; }
+.wz-top { display: grid; gap: 8px; }
+.wz-count { font-size: 13px; color: var(--muted); text-align: center; }
+.wz-bar { height: 10px; border-radius: 99px; background: var(--paper); border: 2px solid var(--line); overflow: hidden; }
+.wz-bar i { display: block; height: 100%; border-radius: 99px; background: linear-gradient(90deg, var(--pink), var(--lav), var(--mint)); transition: width .35s cubic-bezier(.3, .8, .3, 1); }
+.wz-card { background: var(--paper); border-radius: 28px; padding: 26px 20px 22px; border: 2px solid var(--line); box-shadow: 0 10px 0 -4px var(--pink-soft); display: grid; gap: 14px; animation: pop .35s cubic-bezier(.3, 1.4, .5, 1) both; }
+.wz-q { font-size: 22px; font-weight: 600; text-align: center; line-height: 1.4; }
+.wz-hint { color: var(--muted); font-size: 14px; text-align: center; margin-top: -8px; }
+.wz-opts { display: grid; gap: 10px; }
+.wz-opt { border: 2px solid var(--line); background: #fffafb; border-radius: 18px; padding: 12px 16px; cursor: pointer; font-size: 17px; font-weight: 500; text-align: center; display: grid; transition: transform .12s, border-color .12s, background .12s; }
+.wz-opt small { font-size: 13px; color: var(--muted); font-weight: 400; }
+.wz-opt:hover { border-color: var(--pink); transform: translateY(-1px); }
+.wz-opt[aria-pressed="true"] { background: var(--pink); border-color: var(--pink); color: #fff; }
+.wz-opt[aria-pressed="true"] small { color: #fff; }
+.wz-nav { display: flex; justify-content: space-between; gap: 10px; }
+.wz-back, .wz-detail { border: 0; background: none; color: var(--muted); cursor: pointer; font-size: 14px; padding: 6px 4px; text-decoration: underline; text-decoration-color: #e7cbd3; text-underline-offset: 4px; }
+.wz-back:hover, .wz-detail:hover { color: var(--pink-deep); }
+.wz-field { display: grid; gap: 6px; font-weight: 500; }
+.wz-field input { border: 2px solid var(--line); border-radius: 16px; background: #fffafb; padding: 12px 16px; outline: 0; font-weight: 400; }
+.wz-field input:focus { border-color: var(--pink); box-shadow: 0 0 0 4px var(--pink-soft); }
+.wz-consent { display: flex; gap: 10px; align-items: flex-start; font-size: 14px; color: var(--muted); background: var(--mint-soft); padding: 12px 14px; border-radius: 16px; }
+.wz-consent input { width: 20px; height: 20px; accent-color: var(--mint); margin-top: 3px; flex: none; }
+.wz-err { color: var(--pink-deep); font-size: 14px; text-align: center; }
+.wz-go, .btn { border: 0; border-radius: 999px; padding: 13px 28px; font-size: 18px; font-weight: 600; cursor: pointer; background: var(--pink); color: #fff; box-shadow: 0 5px 0 var(--pink-deep); transition: transform .12s, box-shadow .12s; justify-self: center; }
+.wz-go:active, .btn:active { transform: translateY(4px); box-shadow: 0 1px 0 var(--pink-deep); }
+.btn-soft { border: 2px solid var(--line); background: var(--paper); border-radius: 999px; padding: 10px 20px; cursor: pointer; color: var(--muted); font-weight: 500; }
+.btn-soft:hover { border-color: var(--lav); color: var(--ink); }
+
+.fhc-form { display: grid; gap: 14px; }
+.fhc-set { background: var(--paper); border: 2px solid var(--line); border-radius: 24px; padding: 14px 18px 18px; margin: 0; min-width: 0; }
+.fhc-set legend { font-weight: 600; padding: 0 8px; color: var(--pink-deep); }
+.fhc-grid { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(min(200px, 100%), 1fr)); align-items: start; }
+.fhc-field { display: grid; gap: 4px; font-size: 14px; min-width: 0; }
+.fhc-field > span { color: var(--muted); }
+.fhc-field input, .fhc-field select, .fhc-field textarea { width: 100%; border: 2px solid var(--line); border-radius: 14px; background: #fffafb; padding: 10px 12px; outline: 0; font-size: 16px; }
+.fhc-field input:focus, .fhc-field select:focus, .fhc-field textarea:focus { border-color: var(--pink); box-shadow: 0 0 0 4px var(--pink-soft); }
+.fhc-hint { color: var(--muted); font-size: 12px; }
+.fhc-check, .fhc-consent { display: flex; gap: 10px; align-items: flex-start; font-size: 14px; }
+.fhc-consent { background: var(--mint-soft); padding: 12px 14px; border-radius: 16px; color: var(--muted); }
+.fhc-check input, .fhc-consent input { width: 20px; height: 20px; accent-color: var(--mint); margin-top: 3px; flex: none; }
+.fhc-debts { display: grid; gap: 10px; margin-bottom: 10px; }
+.fhc-debt { display: grid; gap: 10px; grid-template-columns: 1fr 1fr; align-items: end; padding-bottom: 12px; border-bottom: 2px dashed var(--line); }
+.fhc-x { width: 38px; height: 42px; border: 0; background: var(--pink-soft); border-radius: 14px; cursor: pointer; color: var(--pink-deep); font-size: 18px; justify-self: end; }
+.fhc-actions { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; }
+.fhc-btn { border: 0; border-radius: 999px; padding: 12px 26px; font-size: 17px; font-weight: 600; cursor: pointer; background: var(--pink); color: #fff; box-shadow: 0 5px 0 var(--pink-deep); }
+.fhc-btn-ghost { border: 2px solid var(--line); background: var(--paper); border-radius: 999px; padding: 9px 18px; cursor: pointer; color: var(--muted); }
+.fhc-err { color: var(--pink-deep); font-size: 14px; text-align: center; }
+
+.res { display: grid; gap: 18px; }
+.score-card { text-align: center; justify-items: center; }
+.ring { position: relative; width: 190px; height: 190px; }
+.ring svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+.ring .in { position: absolute; inset: 0; display: grid; place-items: center; align-content: center; line-height: 1.1; }
+.ring b { font-weight: 700; font-size: 56px; }
+.ring small { color: var(--muted); }
+.level { font-size: 18px; font-weight: 600; padding: 4px 18px; border-radius: 999px; transform: rotate(-2deg); display: inline-block; }
+.lv-good { background: var(--mint-soft); color: #1d8a6c; } .lv-ok { background: var(--lav-soft); color: #6450d0; }
+.lv-warn { background: var(--butter-soft); color: var(--butter-ink); } .lv-bad { background: var(--pink-soft); color: var(--pink-deep); }
+.est { font-size: 13px; color: var(--muted); background: var(--cream); border-radius: 14px; padding: 8px 12px; display: flex; flex-wrap: wrap; gap: 6px 10px; justify-content: center; align-items: center; }
+.radar { max-width: 360px; margin: 0 auto; width: 100%; }
+.radar polygon:not(:last-of-type), .radar line { stroke: #dcbccb; }
+.radar polygon:last-of-type { fill: var(--pink); stroke: var(--pink-deep); }
+.radar circle { fill: var(--lav); }
+.radar text { fill: var(--muted); font-family: var(--font); }
+.metrics { display: grid; gap: 10px; grid-template-columns: repeat(auto-fit, minmax(min(230px, 100%), 1fr)); }
+.metric { border-radius: 20px; padding: 12px 16px; display: grid; }
+.metric.good { background: var(--mint-soft); } .metric.warn { background: var(--butter-soft); } .metric.bad { background: var(--pink-soft); }
+.metric .top { display: flex; justify-content: space-between; gap: 8px; font-size: 14px; }
+.metric .v { font-size: 22px; font-weight: 600; }
+.metric small { color: var(--muted); font-size: 12px; }
+.tag { font-size: 12px; padding: 0 10px; border-radius: 99px; background: rgba(255, 255, 255, .8); white-space: nowrap; align-self: center; }
+.todo { display: grid; gap: 10px; }
+.todo div { display: flex; gap: 12px; align-items: flex-start; padding: 12px 14px; border-radius: 18px; background: var(--cream); }
+.todo .n { width: 28px; height: 28px; border-radius: 10px; background: var(--pink); color: #fff; display: grid; place-items: center; font-weight: 600; flex: none; }
+.chips { display: flex; gap: 8px; flex-wrap: wrap; }
+.chip { border: 2px solid var(--line); background: var(--paper); border-radius: 999px; padding: 5px 16px; cursor: pointer; }
+.chip[aria-pressed="true"] { background: var(--pink-soft); border-color: var(--pink); color: var(--pink-deep); font-weight: 600; }
+.plan-list { margin: 0; padding-left: 22px; display: grid; gap: 6px; }
+.send-card { background: linear-gradient(165deg, #eafff3, #f7fffb); border-color: #c9f0da; box-shadow: 0 10px 0 -4px #d6f5e4; }
+.send-card .txt { width: 100%; border: 2px solid #c9f0da; border-radius: 16px; background: #fff; padding: 12px 16px; outline: 0; }
+.send-card .txt:focus { border-color: var(--mint); box-shadow: 0 0 0 4px var(--mint-soft); }
+.btn-send { border: 0; border-radius: 999px; padding: 13px 24px; font-size: 18px; font-weight: 600; cursor: pointer; background: var(--mint); color: #fff; box-shadow: 0 5px 0 #2a9c7d; width: 100%; }
+.btn-send:active { transform: translateY(4px); box-shadow: 0 1px 0 #2a9c7d; }
+.btn-line { border: 0; border-radius: 999px; padding: 13px 24px; font-size: 18px; font-weight: 600; cursor: pointer; background: var(--line-green); color: #fff; box-shadow: 0 5px 0 #04a446; width: 100%; display: flex; justify-content: center; align-items: center; gap: 10px; }
+.btn-line:active { transform: translateY(4px); box-shadow: 0 1px 0 #04a446; }
+.or { display: flex; align-items: center; gap: 10px; color: var(--muted); font-size: 13px; }
+.or::before, .or::after { content: ""; flex: 1; height: 2px; background: #d6f5e4; }
+.lineid { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; align-items: center; font-size: 14px; color: var(--muted); }
+.lineid b { color: var(--ink); user-select: all; }
+.mini { border: 2px solid #c9f0da; background: #fff; border-radius: 99px; padding: 2px 12px; cursor: pointer; font-size: 13px; color: var(--ink); text-decoration: none; }
+.sent { text-align: center; color: #1d8a6c; font-weight: 600; background: var(--mint-soft); border-radius: 16px; padding: 12px; }
+.row-btns { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; }
+.foot { text-align: center; color: var(--muted); font-size: 12px; margin-top: 26px; display: grid; gap: 2px; }
+.toast { position: fixed; left: 50%; bottom: calc(22px + env(safe-area-inset-bottom, 0px)); transform: translate(-50%, 16px); opacity: 0; background: var(--ink); color: #fff; padding: 9px 18px; border-radius: 99px; font-size: 14px; transition: all .25s; pointer-events: none; z-index: 9; }
+.toast.show { opacity: 1; transform: translate(-50%, 0); }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="hdr">
+    <span class="sticker">ฟรี · ใช้เวลาแค่ 1 นาที</span>
+    <h1>เช็กสุขภาพ<span>การเงิน</span></h1>
+    <p>รู้คะแนนการเงินเต็ม 100 และสิ่งที่ควรทำก่อน</p>
+  </header>
+  <main id="stage"></main>
+  <footer class="foot" id="foot"></footer>
+</div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+/*@FHC_CORE@*/
+</script>
+<script>
+/* ===== ตั้งค่าที่ปรึกษา ===== */
+const ADVISOR = {
+  name: "Satienpong",
+  role: "ที่ปรึกษาการเงินและประกันชีวิต",
+  lineId: "superzerrrr",
+  lineAdd: "https://line.me/ti/p/~superzerrrr",
+};
+/* ========================== */
+(function () {
+  "use strict";
+  const $ = (s, r) => (r || document).querySelector(s);
+  const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  const GAS = typeof google !== "undefined" && google.script && google.script.run;
+  const stage = $("#stage");
+  let quickAnswers = {};
+
+  let toastT;
+  function toast(m) { const t = $("#toast"); t.textContent = m; t.classList.add("show"); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove("show"), 1900); }
+  async function copy(text, ok) {
+    try { await navigator.clipboard.writeText(text); toast(ok || "คัดลอกแล้ว"); }
+    catch (e) { const ta = document.createElement("textarea"); ta.value = text; document.body.appendChild(ta); ta.select(); try { document.execCommand("copy"); toast(ok || "คัดลอกแล้ว"); } catch (_) { toast("คัดลอกไม่ได้"); } ta.remove(); }
+  }
+  const top = () => window.scrollTo({ top: 0, behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
+  $("#foot").innerHTML = `<span>${esc(ADVISOR.name)} · ${esc(ADVISOR.role)} · LINE ${esc(ADVISOR.lineId)}</span><span>ผลประเมินเบื้องต้นด้วยเกณฑ์ทั่วไป ไม่ใช่คำแนะนำการลงทุน</span>`;
+
+  function intro() {
+    stage.innerHTML = `<section class="card pop">
+      <div class="modes">
+        <button type="button" class="mode main" id="m-quick"><span class="badge">แนะนำ</span><b>แบบด่วน 1 นาที</b><span>กดเลือกคำตอบ 12 ข้อ ไม่ต้องพิมพ์ตัวเลข</span></button>
+        <button type="button" class="mode" id="m-detail"><b>แบบละเอียด</b><span>กรอกตัวเลขจริง ได้ผลแม่นกว่า ใช้เวลา 5 นาที</span></button>
+      </div>
+      <div class="trust"><span>ฟรี ไม่มีค่าใช้จ่าย</span><span>ไม่ต้องสมัคร</span><span>ส่งผลให้ที่ปรึกษาเมื่อคุณกดเองเท่านั้น</span></div>
+    </section>`;
+    $("#m-quick").addEventListener("click", quick);
+    $("#m-detail").addEventListener("click", () => detail(null));
+  }
+
+  function quick() {
+    stage.innerHTML = `<div id="wz"></div>`;
+    FHC.wizard($("#wz"), {
+      mode: "public",
+      answers: quickAnswers,
+      consentText: "เข้าใจแล้วว่าเป็นการประเมินเบื้องต้นจากช่วงตัวเลขที่เลือก",
+      onDone: (input, a) => { quickAnswers = a; result(input); },
+      onDetail: (input, a) => { quickAnswers = a; detail(input); },
+    });
+    top();
+  }
+
+  function detail(prefill) {
+    stage.innerHTML = `<section class="card pop" style="gap:6px"><h2 style="font-size:20px;text-align:center">กรอกตัวเลขจริง</h2><p style="text-align:center;color:var(--muted);font-size:14px">${prefill ? "เติมค่าประมาณจากที่คุณเลือกไว้แล้ว แก้ให้ตรงได้เลย" : "ตัวเลขคร่าว ๆ ก็ได้ ช่องที่ไม่รู้เว้นว่างไว้"}</p></section><div id="detail" style="margin-top:16px"></div>
+      <div class="row-btns" style="margin-top:14px"><button type="button" class="btn-soft" id="to-intro">← กลับหน้าแรก</button></div>`;
+    const init = prefill ? Object.assign({}, prefill, { consent: false }) : {};
+    FHC.mount($("#detail"), { mode: "public", initial: init, onSubmit: (input) => result(input) });
+    $("#to-intro").addEventListener("click", intro);
+    top();
+  }
+
+  function result(inp) {
+    const r = FHC.calculate(inp);
+    const lvMsg = { good: "การเงินแข็งแรงดีมาก รักษาวินัยนี้ไว้นะ", ok: "ใช้ได้เลย ปรับอีกนิดจะดีขึ้นอีก", warn: "มีหลายจุดที่ควรเริ่มดูแล ค่อย ๆ ทำทีละข้อได้", bad: "ถึงเวลาจัดการการเงินจริงจังแล้ว เริ่มจากข้อแรกด้านล่างก่อน" };
+    const tagT = { good: "ดีแล้ว", warn: "ควรปรับ", bad: "ต้องดูแล" };
+    stage.innerHTML = `<div class="res">
+      <section class="card score-card pop">
+        <p style="color:var(--muted)">${inp.name ? esc(inp.name) + " · " : ""}คะแนนสุขภาพการเงิน</p>
+        <div class="ring">
+          <svg viewBox="0 0 120 120" aria-hidden="true"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ff7fa8"/><stop offset=".55" stop-color="#9f88ff"/><stop offset="1" stop-color="#3fbf9c"/></linearGradient></defs>
+            <circle cx="60" cy="60" r="50" fill="none" stroke="#fbe9ee" stroke-width="12"/>
+            <circle id="ring" cx="60" cy="60" r="50" fill="none" stroke="url(#g)" stroke-width="12" stroke-linecap="round" stroke-dasharray="314.16" stroke-dashoffset="314.16" style="transition:stroke-dashoffset 1.2s cubic-bezier(.3,.8,.3,1)"/></svg>
+          <div class="in"><b id="score-n">0</b><small>จาก 100</small></div>
+        </div>
+        <span class="level lv-${r.level.key}">ระดับ ${r.level.t}</span>
+        <p>${lvMsg[r.level.key]}</p>
+        ${inp.quick ? `<p class="est"><span>คำนวณจากช่วงตัวเลขที่เลือก</span><button type="button" class="mini" id="refine" style="border-color:var(--line)">กรอกตัวเลขจริงให้แม่นขึ้น</button></p>` : ""}
+      </section>
+
+      <section class="card pop">
+        <h2 style="font-size:20px">ภาพรวม 7 ด้าน</h2>
+        <div class="radar">${FHC.radarSVG(r.metrics)}</div>
+        <div class="metrics">${r.metrics.map((m) => `<div class="metric ${m.status}"><div class="top"><span>${esc(m.name)}</span><span class="tag">${tagT[m.status]}</span></div><span class="v">${esc(m.value)}</span><small>เกณฑ์: ${esc(m.target)}</small></div>`).join("")}</div>
+      </section>
+
+      <section class="card pop">
+        <h2 style="font-size:20px">${r.risks.length ? "3 อย่างที่ควรทำก่อน" : "ไม่พบจุดเสี่ยงสำคัญ"}</h2>
+        <div class="todo">${(r.risks.length ? r.risks : ["รักษาวินัยการเงินแบบนี้ และกลับมาเช็กใหม่ทุก 6–12 เดือน"]).map((t, i) => `<div><span class="n">${i + 1}</span><span>${esc(t)}</span></div>`).join("")}</div>
+        <div class="chips" id="plan-tabs"><button type="button" class="chip" data-p="d30" aria-pressed="true">30 วัน</button><button type="button" class="chip" data-p="d90" aria-pressed="false">90 วัน</button><button type="button" class="chip" data-p="d365" aria-pressed="false">1 ปี</button></div>
+        <ul class="plan-list" id="plan-list">${r.plan.d30.map((t) => `<li>${esc(t)}</li>`).join("")}</ul>
+      </section>
+
+      <section class="card send-card pop">
+        <h2 style="font-size:21px;text-align:center">อยากได้แผนที่ละเอียดกว่านี้ไหม</h2>
+        <p style="color:var(--muted);text-align:center">ส่งผลนี้ให้ ${esc(ADVISOR.name)} ช่วยดูต่อ ฟรี ไม่มีค่าใช้จ่าย</p>
+        <div id="send-sheet" ${GAS ? "" : "hidden"} style="display:grid;gap:10px">
+          <label for="contact" style="font-weight:500">ช่องทางให้ติดต่อกลับ</label>
+          <input class="txt" id="contact" placeholder="LINE ID หรือเบอร์โทร" autocomplete="tel">
+          <label class="wz-consent" for="send-ok"><input type="checkbox" id="send-ok"><span>ยินยอมส่งผลประเมินและช่องทางติดต่อนี้ให้ที่ปรึกษา เพื่อติดต่อกลับเรื่องการวางแผนการเงิน</span></label>
+          <button type="button" class="btn-send" id="send-btn">ส่งให้ที่ปรึกษา</button>
+          <p class="or">หรือ</p>
+        </div>
+        <button type="button" class="btn-line" id="send-line"><svg width="22" height="22" viewBox="0 0 24 24" fill="#fff" aria-hidden="true"><path d="M12 3C6.5 3 2 6.6 2 11c0 3.9 3.5 7.2 8.3 7.9.3.1.8.2.9.5.1.3.1.7 0 1l-.1.9c0 .3-.2 1 .9.5s5.9-3.5 8.1-6C21.3 14.3 22 12.7 22 11c0-4.4-4.5-8-10-8z"/></svg>ส่งผลทาง LINE</button>
+        <div class="lineid">LINE ID <b>${esc(ADVISOR.lineId)}</b><button type="button" class="mini" id="copy-id">คัดลอก</button><a class="mini" href="${ADVISOR.lineAdd}" target="_blank" rel="noopener">เพิ่มเพื่อน</a></div>
+      </section>
+
+      <div class="row-btns"><button type="button" class="btn-soft" id="copy-res">คัดลอกผล</button><button type="button" class="btn-soft" id="restart">เริ่มใหม่</button></div>
+    </div>`;
+    top();
+    const ring = $("#ring"), n = $("#score-n");
+    requestAnimationFrame(() => requestAnimationFrame(() => ring.setAttribute("stroke-dashoffset", String(314.16 * (1 - r.score / 100)))));
+    if (matchMedia("(prefers-reduced-motion: reduce)").matches) n.textContent = r.score;
+    else { const t0 = performance.now(); (function tick(t) { const p = Math.min(1, Math.max(0, (t - t0) / 1100)); n.textContent = Math.round(r.score * (1 - Math.pow(1 - p, 3))); if (p < 1) requestAnimationFrame(tick); })(t0); }
+    $("#plan-tabs").addEventListener("click", (e) => { const b = e.target.closest("[data-p]"); if (!b) return; $("#plan-tabs").querySelectorAll(".chip").forEach((c) => c.setAttribute("aria-pressed", String(c === b))); $("#plan-list").innerHTML = (r.plan[b.dataset.p] || []).map((t) => `<li>${esc(t)}</li>`).join("") || "<li>รักษาแผนเดิม</li>"; });
+    const summary = () => FHC.lineSummary(inp, r, { footer: "ส่งจากหน้าเช็กสุขภาพการเงิน อยากให้ช่วยดูรายละเอียดเพิ่ม" });
+    $("#send-line").addEventListener("click", () => window.open("https://line.me/R/share?text=" + encodeURIComponent(summary()), "_blank", "noopener"));
+    $("#copy-id").addEventListener("click", () => copy(ADVISOR.lineId, "คัดลอก LINE ID แล้ว"));
+    $("#copy-res").addEventListener("click", () => copy(summary(), "คัดลอกผลแล้ว"));
+    $("#restart").addEventListener("click", () => { quickAnswers = {}; intro(); top(); });
+    const rf = $("#refine"); if (rf) rf.addEventListener("click", () => detail(inp));
+    if (GAS) $("#send-btn").addEventListener("click", () => sendToSheet(inp, r));
+  }
+
+  function sendToSheet(inp, r) {
+    const contact = $("#contact").value.trim(), ok = $("#send-ok").checked, btn = $("#send-btn");
+    if (!contact) { toast("ใส่ LINE ID หรือเบอร์โทรก่อนนะ"); $("#contact").focus(); return; }
+    if (!ok) { toast("ติ๊กยินยอมก่อนส่งนะ"); return; }
+    btn.disabled = true; btn.textContent = "กำลังส่ง…";
+    const payload = {
+      name: inp.name || "", contact, consent: true, mode: inp.quick ? "ด่วน" : "ละเอียด",
+      score: r.score, level: r.level.t,
+      metrics: r.metrics.map((m) => ({ name: m.name, value: m.value, status: m.status })),
+      risks: r.risks, goal: inp.goal || "", input: inp,
+    };
+    google.script.run
+      .withSuccessHandler(() => { $("#send-sheet").innerHTML = `<p class="sent">ส่งแล้ว ที่ปรึกษาจะติดต่อกลับเร็ว ๆ นี้</p>`; toast("ส่งเรียบร้อย"); })
+      .withFailureHandler(() => { btn.disabled = false; btn.textContent = "ส่งให้ที่ปรึกษา"; toast("ส่งไม่สำเร็จ ลองอีกครั้ง หรือส่งทาง LINE แทน"); })
+      .submitLead(payload);
+  }
+
+  intro();
+})();
+</script>
+</body>
+</html>
