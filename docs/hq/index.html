@@ -5,6 +5,12 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="robots" content="noindex,nofollow">
 <meta name="theme-color" content="#0b1030">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" href="icon-192.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Content HQ">
 <title>Content HQ การเงิน</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -374,6 +380,42 @@ select option { background: var(--bg1); color: var(--fg); }
 .ld-item .t { min-width: 0; overflow-wrap: anywhere; }
 #ld-filter { border-radius: 18px; }
 
+/* ---- v4: month calendar ---- */
+.cal-head { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+.cal-head h3 { flex: 1; text-align: center; margin: 0; font-family: var(--font-display); font-size: 18px; }
+.cal-dow, .cal-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; }
+.cal-dow span { text-align: center; font-size: 12px; color: var(--muted); padding-bottom: 4px; }
+.cal-d { position: relative; min-height: 86px; display: flex; flex-direction: column; align-items: stretch; gap: 3px; text-align: left; padding: 6px; border-radius: 10px; border: 1px solid var(--stroke); background: var(--glass-in); color: var(--fg); font: inherit; cursor: pointer; overflow: hidden; }
+.cal-d:hover { border-color: var(--stroke-hi); }
+.cal-d.out { opacity: .38; }
+.cal-d.wk { background: rgba(143, 163, 255, .08); }
+.cal-d.today { border-color: var(--mint); }
+.cal-d.today .n { background: var(--mint); color: var(--on-accent); }
+.cal-d.sel { box-shadow: 0 0 0 2px var(--accent) inset; }
+.cal-d .n { font-family: var(--font-data); font-size: 13px; font-weight: 600; width: 24px; height: 24px; display: grid; place-items: center; border-radius: 50%; }
+.cal-d .t { font-size: 11.5px; line-height: 1.3; color: var(--muted); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.cal-d .marks { display: flex; gap: 3px; margin-top: auto; }
+.cal-d .ev { font-size: 10.5px; color: var(--amber); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cal-d .ok { position: absolute; top: 5px; right: 7px; color: var(--good); font-weight: 700; font-size: 13px; }
+.cl-tt, .cl-sp, .cl-ev { display: inline-block; width: 8px; height: 8px; border-radius: 50%; vertical-align: middle; }
+.cl-tt { background: transparent; border: 2px solid var(--accent); }
+.cl-sp { background: transparent; border: 2px solid var(--mint); }
+.cl-ev { background: var(--amber); }
+.cl-tt.done { background: var(--accent); } .cl-sp.done { background: var(--mint); }
+.cal-legend { margin: 10px 0 0; display: flex; flex-wrap: wrap; gap: 4px 8px; align-items: center; }
+.cal-det { margin-top: 12px; padding: 14px; border-radius: var(--r-sm); border: 1px solid var(--stroke-hi); background: var(--glass-hi); display: grid; gap: 8px; }
+.cal-det p { margin: 0; }
+@media (max-width: 640px) {
+  .cal-d { min-height: 58px; padding: 4px; align-items: center; }
+  .cal-d .t, .cal-d .ev { display: none; }
+  .cal-d .marks { gap: 2px; }
+  .cl-tt, .cl-sp { width: 6px; height: 6px; border-width: 1.5px; }
+  .cal-d .ok { top: 2px; right: 3px; font-size: 11px; }
+}
+/* install-app button */
+.pin-install { position: fixed; left: 12px; bottom: 12px; z-index: 40; font: inherit; font-size: 13px; padding: 6px 12px; border-radius: 99px; border: 1px solid var(--accent); background: rgba(11,16,48,.8); color: var(--fg); cursor: pointer; }
+.cal-d .marks .cl-ev { width: 6px; height: 6px; }
+
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
@@ -509,7 +551,7 @@ select option { background: var(--bg1); color: var(--fg); }
   <main id="p-plan" role="tabpanel" aria-labelledby="tab-plan" hidden class="fade-in">
     <div class="panel-head">
       <div><p class="eyebrow">ทีมวางแผนรายสัปดาห์</p><h2>แผนคอนเทนต์ 7 วัน</h2></div>
-      <div class="row"><button class="btn-ghost" id="pl-ics" disabled>ลงปฏิทิน (.ics)</button><button class="btn" id="pl-gen">ให้ AI วางแผน</button></div>
+      <div class="row"><button class="btn-ghost" id="pl-gcal" disabled hidden>ลง Google Calendar</button><button class="btn-ghost" id="pl-ics" disabled>ไฟล์ .ics</button><button class="btn" id="pl-gen">ให้ AI วางแผน</button></div>
     </div>
     <div class="glass tile" style="margin-bottom:18px">
       <div class="ctl-row">
@@ -520,6 +562,13 @@ select option { background: var(--bg1); color: var(--fg); }
       </div>
       <p class="note" style="margin-top:10px">AI ค้นข่าว วันสำคัญ และแคมเปญ Shopee ของสัปดาห์นั้นให้ หัวข้อในแผนจะขึ้นในหน้างานวันนี้ให้อัตโนมัติ ไฟล์ .ics เปิดในมือถือหรือนำเข้า Google Calendar ได้ (มีแจ้งเตือนก่อน 10 นาที)</p>
     </div>
+    <section class="glass tile cal" id="pl-cal" style="margin-bottom:18px">
+      <div class="cal-head"><button class="mini" id="cal-prev" aria-label="เดือนก่อน">‹</button><h3 id="cal-title"></h3><button class="mini" id="cal-next" aria-label="เดือนถัดไป">›</button><button class="mini" id="cal-today">วันนี้</button></div>
+      <div class="cal-dow"><span>จ</span><span>อ</span><span>พ</span><span>พฤ</span><span>ศ</span><span>ส</span><span>อา</span></div>
+      <div class="cal-grid" id="cal-grid"></div>
+      <p class="note cal-legend"><span class="cl-tt"></span> คลิป TikTok <span class="cl-sp"></span> โพสต์ Shopee <span class="cl-ev"></span> วันสำคัญ · ✓ = ทำแล้ว · กดวันที่เพื่อดูรายละเอียด</p>
+      <div id="cal-detail"></div>
+    </section>
     <div id="pl-out" class="out empty">ยังไม่มีแผนของสัปดาห์นี้ กด “ให้ AI วางแผน”</div>
   </main>
 
@@ -738,7 +787,22 @@ select option { background: var(--bg1); color: var(--fg); }
   }
   const user = { id: async () => "me", name: async () => "Satienpong" };
 
+  // ---------- ติดตั้งเป็นแอป (PWA) ----------
+  if ("serviceWorker" in navigator && location.protocol === "https:") navigator.serviceWorker.register("sw.js").catch(() => {});
+  let installEvt = null;
+  window.addEventListener("beforeinstallprompt", (e) => {
+    e.preventDefault(); installEvt = e;
+    ready.then(() => {
+      if (document.querySelector(".pin-install")) return;
+      const b = document.createElement("button"); b.className = "pin-install"; b.type = "button"; b.textContent = "📲 ติดตั้งแอป";
+      b.addEventListener("click", async () => { if (!installEvt) return; installEvt.prompt(); try { await installEvt.userChoice; } catch (x) {} installEvt = null; b.remove(); });
+      document.body.appendChild(b);
+    });
+  });
+  window.addEventListener("appinstalled", () => { const b = document.querySelector(".pin-install"); if (b) b.remove(); });
+
   window.HQ_GITHUB = true;
+  window.HQ_API = async (action, body) => { await ready; return call(action, body); };
   window.claude = {
     use: async (cap) => { await ready; return { sample, db, user, mcp }[cap] || null; },
   };
@@ -1854,7 +1918,8 @@ ${r.metrics.map((m) => `${m.name}: ${m.value} (เกณฑ์ ${m.target}) ส�
   $("#pl-week").addEventListener("change", loadPlan);
   function renderPlan() {
     const wk = $("#pl-week").value, pl = plans[wk], out = $("#pl-out");
-    $("#pl-ics").disabled = !pl;
+    $("#pl-ics").disabled = !pl; $("#pl-gcal").disabled = !pl; $("#pl-gcal").hidden = !GH;
+    renderCal();
     $("#pl-gen").textContent = pl ? "วางแผนใหม่" : "ให้ AI วางแผน";
     if (!pl) { out.className = "out empty"; out.textContent = "ยังไม่มีแผนของสัปดาห์นี้ กด “ให้ AI วางแผน”"; return; }
     out.className = "out fade-in";
@@ -1907,11 +1972,10 @@ ${$("#pl-note").value.trim() ? "เจ้าของอยากเน้น: "
   function icsTime(iso, hm) { const [h, m] = hm.split(":").map(Number); const d = new Date(Date.UTC(+iso.slice(0, 4), +iso.slice(5, 7) - 1, +iso.slice(8, 10), h - 7, m)); return d.toISOString().replace(/[-:]/g, "").slice(0, 15) + "Z"; }
   const addMin = (hm, n) => { const t = hm.split(":").map(Number), x = t[0] * 60 + t[1] + n; return `${String(Math.floor(x / 60)).padStart(2, "0")}:${String(x % 60).padStart(2, "0")}`; };
   const icsEsc = (t) => String(t || "").replace(/\\/g, "\\\\").replace(/\n/g, "\\n").replace(/([,;])/g, "\\$1");
-  $("#pl-ics").addEventListener("click", () => {
-    const wk = $("#pl-week").value, pl = plans[wk]; if (!pl) return;
-    const shoot = $("#pl-shoot").value || "20:30", post = $("#pl-post").value || "18:00";
-    const ev = [], stamp = new Date().toISOString().replace(/[-:]/g, "").slice(0, 15) + "Z";
-    const add = (date, start, mins, title, desc, alarm) => ev.push(["BEGIN:VEVENT", `UID:${wk}-${ev.length}@content-hq`, `DTSTAMP:${stamp}`, `DTSTART:${icsTime(date, start)}`, `DTEND:${icsTime(date, addMin(start, mins))}`, `SUMMARY:${icsEsc(title)}`, `DESCRIPTION:${icsEsc(desc)}`].concat(alarm ? ["BEGIN:VALARM", "ACTION:DISPLAY", `DESCRIPTION:${icsEsc(title)}`, "TRIGGER:-PT10M", "END:VALARM"] : []).concat(["END:VEVENT"]).join("\r\n"));
+  function planEvents(wk) {
+    const pl = plans[wk]; if (!pl) return [];
+    const shoot = $("#pl-shoot").value || "20:30", post = $("#pl-post").value || "18:00", ev = [];
+    const add = (date, start, mins, title, desc, alarm) => ev.push({ date, start, mins, title, desc, alarm });
     pl.days.forEach((d) => {
       const tt = d.tiktok || {};
       add(shiftDate(d.date, -1), shoot, 60, `[TT] ถ่าย/ตัดต่อ: ${tt.title || ""}`, `Hook: ${tt.hook || ""}\nรูปแบบ: ${tt.format || ""}`, true);
@@ -1920,11 +1984,76 @@ ${$("#pl-note").value.trim() ? "เจ้าของอยากเน้น: "
       if (d.ic) add(d.date, "21:30", 45, `[IC] อ่านหนังสือ: ${d.ic}`, "ทำข้อสอบจำลองในแท็บ ติว IC ต่อได้", false);
       if (weekday(d.date) === 0) add(d.date, "20:00", 30, "[REPORT] สรุปผลสัปดาห์", "เปิด HQ ดู Lead และวางแผนสัปดาห์หน้า", true);
     });
+    return ev;
+  }
+  $("#pl-ics").addEventListener("click", () => {
+    const wk = $("#pl-week").value, evs = planEvents(wk); if (!evs.length) return;
+    const stamp = new Date().toISOString().replace(/[-:]/g, "").slice(0, 15) + "Z";
+    const ev = evs.map((e, i) => ["BEGIN:VEVENT", `UID:${wk}-${i}@content-hq`, `DTSTAMP:${stamp}`, `DTSTART:${icsTime(e.date, e.start)}`, `DTEND:${icsTime(e.date, addMin(e.start, e.mins))}`, `SUMMARY:${icsEsc(e.title)}`, `DESCRIPTION:${icsEsc(e.desc)}`].concat(e.alarm ? ["BEGIN:VALARM", "ACTION:DISPLAY", `DESCRIPTION:${icsEsc(e.title)}`, "TRIGGER:-PT10M", "END:VALARM"] : []).concat(["END:VEVENT"]).join("\r\n"));
     const ics = ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//Content HQ//TH", "CALSCALE:GREGORIAN", "X-WR-CALNAME:Content HQ", ...ev, "END:VCALENDAR"].join("\r\n");
     const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([ics], { type: "text/calendar;charset=utf-8" })); a.download = `content-hq-${wk}.ics`;
     document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
     toast(`ดาวน์โหลด ${ev.length} รายการแล้ว เปิดไฟล์เพื่อเพิ่มลงปฏิทิน`);
   });
+  $("#pl-gcal").addEventListener("click", async () => {
+    const wk = $("#pl-week").value, evs = planEvents(wk); if (!evs.length || !window.HQ_API) return;
+    const btn = $("#pl-gcal"); btn.disabled = true; btn.textContent = "กำลังลงปฏิทิน…";
+    const iso = (date, hm) => `${date}T${hm}:00+07:00`;
+    try {
+      const j = await window.HQ_API("calsync", { week: wk, from: iso(shiftDate(wk, -1), "00:00"), to: iso(shiftDate(wk, 7), "00:00"),
+        events: evs.map((e) => ({ title: e.title, desc: e.desc, alarm: e.alarm, start: iso(e.date, e.start), end: iso(e.date, addMin(e.start, e.mins)) })) });
+      const pl = plans[wk]; pl.gcalAt = Date.now();
+      if (db && uid) db.collection(`data/users/${uid}/plans/items`).doc(wk).set(JSON.parse(JSON.stringify(pl))).catch(() => {});
+      toast(`ลง Google Calendar ${j.n} รายการแล้ว${j.removed ? ` (แทนที่ของเดิม ${j.removed})` : ""}`);
+    } catch (e) { banner("ลง Google Calendar ไม่สำเร็จ: " + (e.message || e.code)); }
+    btn.disabled = false; btn.textContent = "ลง Google Calendar";
+  });
+
+  // ---------------- month calendar ----------------
+  let calMonth = bkkDate().slice(0, 7), calSel = null;
+  const MONTHS = ["มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน", "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"];
+  const shiftMonth = (ym, n) => { let y = +ym.slice(0, 4), m = +ym.slice(5, 7) - 1 + n; y += Math.floor(m / 12); m = ((m % 12) + 12) % 12; return `${y}-${String(m + 1).padStart(2, "0")}`; };
+  async function renderCal() {
+    const first = calMonth + "-01", start = mondayOf(first), today = bkkDate();
+    const cells = [...Array(42)].map((_, i) => shiftDate(start, i));
+    const rows = cells[35].slice(0, 7) === calMonth ? 6 : 5, days = cells.slice(0, rows * 7);
+    $("#cal-title").textContent = `${MONTHS[+calMonth.slice(5, 7) - 1]} ${+calMonth.slice(0, 4) + 543}`;
+    await Promise.all([...new Set(days.map(mondayOf))].map(ensurePlan));
+    const selWeek = mondayOf($("#pl-week").value || today);
+    $("#cal-grid").innerHTML = days.map((d) => {
+      const pd = planDay(d), pl = plans[mondayOf(d)], evs = pl && Array.isArray(pl.events) ? pl.events.filter((e) => e.date === d) : [];
+      const ttDone = logs.some((l) => l.date === d && l.kind === "TT"), spDone = logs.filter((l) => l.date === d && l.kind === "SP").length;
+      const cls = ["cal-d", d.slice(0, 7) !== calMonth ? "out" : "", d === today ? "today" : "", d === calSel ? "sel" : "", mondayOf(d) === selWeek ? "wk" : "", pd ? "has" : ""].join(" ");
+      return `<button type="button" class="${cls}" data-cal="${d}" aria-label="${thaiLabel(d)}${pd ? " มีแผน" : ""}"><span class="n">${+d.slice(8)}</span>
+        ${pd ? `<span class="t">${esc(pd.tiktok && pd.tiktok.title || "")}</span><span class="marks"><i class="cl-tt ${ttDone ? "done" : ""}"></i>${[0, 1, 2].map((k) => `<i class="cl-sp ${k < spDone ? "done" : ""}"></i>`).join("")}${evs.length ? '<i class="cl-ev"></i>' : ""}</span>` : ""}
+        ${evs.length ? `<span class="ev" title="${esc(evs.map((e) => e.name).join(", "))}">${esc(evs[0].name)}</span>` : ""}${ttDone && spDone >= 3 ? '<span class="ok">✓</span>' : ""}</button>`;
+    }).join("");
+    renderCalDetail();
+  }
+  function renderCalDetail() {
+    const el = $("#cal-detail"); if (!calSel) { el.innerHTML = ""; return; }
+    const pd = planDay(calSel), wk = mondayOf(calSel);
+    if (!pd) { el.innerHTML = `<div class="cal-det"><b>${esc(thaiLabel(calSel))}</b><p class="note">ยังไม่มีแผนของสัปดาห์นี้</p><button class="btn" data-calplan="${wk}">ให้ AI วางแผนสัปดาห์นี้</button></div>`; return; }
+    el.innerHTML = `<div class="cal-det"><div class="row" style="justify-content:space-between"><b>${esc(thaiLabel(calSel))}</b><span class="note">${esc(PILLARS[weekday(calSel)].t)}</span></div>
+      <p>🎬 <b>${esc(pd.tiktok && pd.tiktok.title)}</b><br><span class="note">Hook: ${esc(pd.tiktok && pd.tiktok.hook)}</span></p>
+      <ul class="pl-sp">${(pd.sp || []).map((x, i) => `<li><span class="t">${SLOTS[i] ? SLOTS[i].time : esc(x.time)}</span> ${esc(x.product)} <span class="note">· ${esc(x.pain)}</span></li>`).join("")}</ul>
+      ${pd.ic ? `<p class="note">📚 IC: ${esc(pd.ic)}</p>` : ""}
+      <div class="row"><button class="btn" data-calopen="${calSel}">เปิดในงานวันนี้</button></div></div>`;
+  }
+  $("#cal-grid").addEventListener("click", (e) => {
+    const b = e.target.closest("[data-cal]"); if (!b) return;
+    calSel = b.dataset.cal;
+    const wk = mondayOf(calSel);
+    if ($("#pl-week").value !== wk) { $("#pl-week").value = wk; renderPlan(); } else renderCal();
+  });
+  $("#cal-detail").addEventListener("click", async (e) => {
+    const o = e.target.closest("[data-calopen]"), g = e.target.closest("[data-calplan]");
+    if (o) { $("#tt-date").value = o.dataset.calopen; syncPillar(); await loadDay(); selectTab("today"); }
+    if (g) { $("#pl-week").value = g.dataset.calplan; $("#pl-gen").click(); }
+  });
+  $("#cal-prev").addEventListener("click", () => { calMonth = shiftMonth(calMonth, -1); renderCal(); });
+  $("#cal-next").addEventListener("click", () => { calMonth = shiftMonth(calMonth, 1); renderCal(); });
+  $("#cal-today").addEventListener("click", () => { calMonth = bkkDate().slice(0, 7); calSel = bkkDate(); $("#pl-week").value = mondayOf(calSel); renderPlan(); });
 
   // ---------------- IC quiz ----------------
   const IC_TOPICS = ["ความรู้พื้นฐานการลงทุน & มูลค่าเงินตามเวลา", "ตราสารหนี้ (ราคา อายุ YTM Duration)", "ตราสารทุน & การวิเคราะห์หุ้นเบื้องต้น", "กองทุนรวม (ประเภท ค่าธรรมเนียม NAV)", "อนุพันธ์เบื้องต้น", "ความเสี่ยง ผลตอบแทน & การกระจายความเสี่ยง", "การจัดสรรสินทรัพย์ & ระดับความเสี่ยงผู้ลงทุน (Suitability)", "กฎระเบียบ จรรยาบรรณผู้แนะนำการลงทุน", "ภาษีการลงทุน & กองทุนลดหย่อนภาษี", "ประกันควบการลงทุน (Unit Linked)"];

@@ -142,7 +142,22 @@
   }
   const user = { id: async () => "me", name: async () => "Satienpong" };
 
+  // ---------- ติดตั้งเป็นแอป (PWA) ----------
+  if ("serviceWorker" in navigator && location.protocol === "https:") navigator.serviceWorker.register("sw.js").catch(() => {});
+  let installEvt = null;
+  window.addEventListener("beforeinstallprompt", (e) => {
+    e.preventDefault(); installEvt = e;
+    ready.then(() => {
+      if (document.querySelector(".pin-install")) return;
+      const b = document.createElement("button"); b.className = "pin-install"; b.type = "button"; b.textContent = "📲 ติดตั้งแอป";
+      b.addEventListener("click", async () => { if (!installEvt) return; installEvt.prompt(); try { await installEvt.userChoice; } catch (x) {} installEvt = null; b.remove(); });
+      document.body.appendChild(b);
+    });
+  });
+  window.addEventListener("appinstalled", () => { const b = document.querySelector(".pin-install"); if (b) b.remove(); });
+
   window.HQ_GITHUB = true;
+  window.HQ_API = async (action, body) => { await ready; return call(action, body); };
   window.claude = {
     use: async (cap) => { await ready; return { sample, db, user, mcp }[cap] || null; },
   };

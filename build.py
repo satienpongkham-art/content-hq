@@ -24,6 +24,12 @@ HEAD = """<!doctype html>
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="robots" content="noindex,nofollow">
 <meta name="theme-color" content="#0b1030">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" href="icon-192.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Content HQ">
 """
 build("hq.html", root / "docs" / "hq" / "index.html", **{"<title>": HEAD + "<title>", "/*@HQ_CSS@*/": hq_css, "/*@FHC_CORE@*/": core,
       "<!--@SHIM@-->": "<script>\n" + shim + "\n</script>", "<svg width=\"0\"": "</head>\n<body>\n<svg width=\"0\""})

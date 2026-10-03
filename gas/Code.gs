@@ -280,6 +280,7 @@ function doPost(e) {
       case 'del': storeDel_(req.collection, req.id); return json_({ ok: true });
       case 'leads': return json_({ ok: true, text: leadsMarkdown_() });
       case 'ai': return json_(apiAi_(req));
+      case 'calsync': return json_(calSync_(req));
       default: return json_({ ok: false, error: 'unknown_action' });
     }
   } catch (err) {
@@ -518,3 +519,24 @@ function morningBrief() {
   L.push('', 'เปิด HQ: https://satienpongkham-art.github.io/content-hq/hq/');
   console.log(pushLine_(L.join('\n')));
 }
+
+/* ---------- ลงแผนใน Google Calendar ของเจ้าของ ---------- */
+function calSync_(req) {
+  const week = clip_(req.week, 10);
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(week)) return { ok: false, error: 'bad week' };
+  const tag = '#ContentHQ ' + week, cal = CalendarApp.getDefaultCalendar();
+  const evs = (Array.isArray(req.events) ? req.events : []).slice(0, 80);
+  let removed = 0;
+  cal.getEvents(new Date(req.from), new Date(req.to), { search: 'ContentHQ' }).forEach((e) => {
+    if (String(e.getDescription() || '').indexOf(tag) >= 0) { e.deleteEvent(); removed++; } // ลบเฉพาะรายการที่ระบบนี้สร้างไว้ของสัปดาห์เดียวกัน
+  });
+  evs.forEach((x) => {
+    const st = new Date(x.start), en = new Date(x.end);
+    if (isNaN(st) || isNaN(en)) return;
+    const e = cal.createEvent(clip_(x.title, 200), st, en, { description: clip_(x.desc, 1500) + '\n\n' + tag });
+    e.removeAllReminders(); if (x.alarm) e.addPopupReminder(10);
+  });
+  return { ok: true, n: evs.length, removed: removed };
+}
+/** รันครั้งเดียวในหน้า Apps Script เพื่ออนุญาตสิทธิ์ปฏิทิน */
+function authorizeCalendar() { Logger.log(CalendarApp.getDefaultCalendar().getName()); }
