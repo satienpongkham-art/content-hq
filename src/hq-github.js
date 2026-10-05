@@ -133,12 +133,84 @@
 
   // ---------- sample (AI) ----------
   const emitCost = (c) => { if (c) window.dispatchEvent(new CustomEvent("hq-cost", { detail: c })); };
+  // AI: เรียก Claude API ตรงจากเบราว์เซอร์แบบสตรีม (คีย์อยู่ในหน่วยความจำเท่านั้น ไม่เก็บลงเครื่อง)
+  let aiCfg = null;
+  async function getCfg() { if (!aiCfg) aiCfg = await call("aikey"); emitCost(aiCfg.cost); return aiCfg; }
+  async function streamOnce(body, key, onDelta) {
+    const res = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: { "content-type": "application/json", "x-api-key": key, "anthropic-version": "2023-06-01", "anthropic-dangerous-direct-browser-access": "true" },
+      body: JSON.stringify(Object.assign({}, body, { stream: true })),
+    }).catch(() => { throw { message: "เชื่อมต่อ Claude ไม่ได้ ตรวจอินเทอร์เน็ตแล้วลองใหม่", code: "network" }; });
+    if (!res.ok) { let m = ""; try { const j = await res.json(); m = (j.error && j.error.message) || ""; } catch (e) {} throw { message: "Claude API " + res.status + ": " + m.slice(0, 200), code: "api_" + res.status, status: res.status, raw: m }; }
+    const reader = res.body.getReader(), dec = new TextDecoder(); let buf = "";
+    const blocks = [], usage = {}; let stop = "";
+    for (;;) {
+      const { value, done } = await reader.read(); if (done) break;
+      buf += dec.decode(value, { stream: true });
+      let i; while ((i = buf.indexOf("\n\n")) >= 0) {
+        const chunk = buf.slice(0, i); buf = buf.slice(i + 2);
+        const line = chunk.split("\n").find((l) => l.startsWith("data:")); if (!line) continue;
+        let ev; try { ev = JSON.parse(line.slice(5)); } catch (e) { continue; }
+        if (ev.type === "message_start" && ev.message && ev.message.usage) Object.assign(usage, ev.message.usage);
+        else if (ev.type === "content_block_start") { const b = Object.assign({}, ev.content_block); if (b.type === "tool_use" || b.type === "server_tool_use") b._json = ""; blocks[ev.index] = b; }
+        else if (ev.type === "content_block_delta") {
+          const b = blocks[ev.index]; if (!b) continue;
+          if (ev.delta.type === "text_delta") { b.text = (b.text || "") + ev.delta.text; onDelta(blocks); }
+          else if (ev.delta.type === "input_json_delta") { b._json += ev.delta.partial_json; onDelta(blocks); }
+        } else if (ev.type === "content_block_stop") { const b = blocks[ev.index]; if (b && b._json != null) { try { b.input = b._json ? JSON.parse(b._json) : {}; } catch (e) { b.input = {}; } } }
+        else if (ev.type === "message_delta") { if (ev.usage) Object.assign(usage, ev.usage); if (ev.delta && ev.delta.stop_reason) stop = ev.delta.stop_reason; }
+        else if (ev.type === "error") throw { message: "Claude API: " + ((ev.error && ev.error.message) || "error"), code: "stream_error" };
+      }
+    }
+    return { blocks: blocks.filter(Boolean), usage, stop };
+  }
   async function sample(prompt, opts) {
-    const o = opts || {};
-    const j = await call("ai", { prompt: String(prompt), maxTokens: o.maxTokens || 4000, json: !!o.json, search: !!o.search, tier: o.tier || "default" });
-    emitCost(j.cost);
-    if (o.onText) { try { o.onText({ text: j.text }); } catch (e) {} }
-    return { text: j.text, model: j.model, sources: j.sources || [] };
+    const o = opts || {}, cfg = await getCfg();
+    const model = o.tier === "fast" ? cfg.models.fast : cfg.models.default;
+    let search = !!o.search, text0 = String(prompt);
+    const run = async () => {
+      const tools = [];
+      if (search) tools.push({ type: "web_search_20250305", name: "web_search", max_uses: 3 });
+      let p = text0;
+      if (o.json) {
+        tools.push({ name: "respond", description: "ส่งคำตอบสุดท้าย เป็นข้อมูลตามรูปแบบ JSON ที่กำหนดในคำสั่ง ใส่ทุกฟิลด์ที่กำหนดไว้ที่ระดับบนสุดของ input", input_schema: { type: "object", additionalProperties: true } });
+        p += search ? "\n\nค้นเว็บเท่าที่จำเป็น (ไม่เกิน 3 ครั้ง) แล้วส่งคำตอบสุดท้ายด้วยเครื่องมือ respond เท่านั้น" : "\n\nต้องส่งคำตอบด้วยเครื่องมือ respond เท่านั้น ห้ามตอบเป็นข้อความ";
+      }
+      const body = { model, max_tokens: Math.min(o.maxTokens || 4000, 12000), messages: [{ role: "user", content: p }] };
+      if (tools.length) body.tools = tools;
+      let out = null, text = "", live = "";
+      const sources = [], seen = {};
+      for (let turn = 0; turn < 4; turn++) {
+        const r = await streamOnce(body, cfg.key, (bl) => {
+          if (!o.onText) return;
+          live = text + bl.filter(Boolean).map((b) => b.text || b._json || "").join("");
+          try { o.onText({ text: live }); } catch (e) {}
+        });
+        // usage → บันทึกค่าใช้จ่ายรายเดือนที่ฝั่ง Google (ไม่รอผล)
+        call("usage", { model, usage: r.usage }).then((j) => emitCost(j.cost), () => {});
+        r.blocks.forEach((b) => {
+          if (b.type === "tool_use" && b.name === "respond") out = b.input;
+          if (b.type === "text") text += b.text || "";
+          if (b.type === "web_search_tool_result" && Array.isArray(b.content)) b.content.forEach((x) => { if (x.url && !seen[x.url] && sources.length < 8) { seen[x.url] = 1; sources.push({ title: x.title || x.url, url: x.url }); } });
+        });
+        const clean = r.blocks.map((b) => { const c = Object.assign({}, b); delete c._json; return c; });
+        if (r.stop === "pause_turn") { body.messages = [body.messages[0], { role: "assistant", content: clean }]; continue; }
+        if (o.json && !out && turn === 0 && r.stop === "end_turn" && !/\{[\s\S]*\}/.test(text)) {
+          body.messages = [body.messages[0], { role: "assistant", content: clean }, { role: "user", content: "ส่งคำตอบสุดท้ายด้วยเครื่องมือ respond ตอนนี้เลย" }]; continue;
+        }
+        if (!out && !text.trim()) throw { message: r.stop === "max_tokens" ? "คำตอบยาวเกินกำหนด ลองใหม่อีกครั้ง" : "AI ไม่ได้ส่งคำตอบ ลองใหม่อีกครั้ง", code: "empty" };
+        break;
+      }
+      if (out && Object.keys(out).length === 1) { const v = out[Object.keys(out)[0]]; if (v && typeof v === "object" && !Array.isArray(v)) out = v; else if (typeof v === "string") { try { const w = JSON.parse(v); if (w && typeof w === "object") out = w; } catch (e) {} } }
+      return { text: out ? JSON.stringify(out) : text, model, sources };
+    };
+    try { return await run(); }
+    catch (e) {
+      if (search && e && e.status === 400 && /web_search|web search|tools\./i.test(e.raw || "")) { search = false; text0 += "\n(ค้นเว็บไม่ได้ในครั้งนี้ ให้ระบุใน sources_note ว่าต้องเช็กข้อมูลอะไร)"; return run(); }
+      if (e && (e.status === 401 || e.status === 403)) aiCfg = null;
+      throw e;
+    }
   }
   const user = { id: async () => "me", name: async () => "Satienpong" };
 

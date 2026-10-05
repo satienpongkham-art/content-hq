@@ -280,6 +280,11 @@ function doPost(e) {
       case 'del': storeDel_(req.collection, req.id); return json_({ ok: true });
       case 'leads': return json_({ ok: true, text: leadsMarkdown_() });
       case 'ai': return json_(apiAi_(req));
+      case 'aikey': { // ให้หน้า HQ เรียก Claude ตรงจากเบราว์เซอร์ (กันปัญหา Google ตัดการเชื่อมต่อเมื่อเกิน ~45 วิ)
+        const k = prop_('ANTHROPIC_KEY'); if (!k) return json_({ ok: false, error: 'ยังไม่ได้ตั้งค่า ANTHROPIC_KEY ใน Script Properties' });
+        return json_({ ok: true, key: k, models: { fast: claudeModel_('fast'), default: claudeModel_('default') }, cost: usageMonth_() });
+      }
+      case 'usage': if (req.model && req.usage) addUsage_(String(req.model), req.usage); return json_({ ok: true, cost: usageMonth_() });
       case 'calsync': return json_(calSync_(req));
       default: return json_({ ok: false, error: 'unknown_action' });
     }
