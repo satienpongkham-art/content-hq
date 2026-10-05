@@ -1,7 +1,7 @@
 <title>Content HQ การเงิน</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Prompt:wght@400;500;600;700&family=Sarabun:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Kanit:wght@600;700;800&family=Prompt:wght@400;500;600;700&family=Sarabun:wght@400;500;600&display=swap">
 <style>
 /*@HQ_CSS@*/
 </style>
@@ -263,8 +263,25 @@
   const GH = !!window.HQ_GITHUB; // เวอร์ชัน GitHub: ค้นเว็บได้ + โหมดประหยัด
   const SEARCH_NOTE = (on) => on ? "\nคุณค้นเว็บได้ ใช้ยืนยันข่าว/ตัวเลข/ข้อเท็จจริงล่าสุด ใส่ชื่อแหล่งข้อมูลใน sources_note" : "\nคุณค้นเว็บไม่ได้ในครั้งนี้ ข้อเท็จจริงที่อาจเปลี่ยนตามเวลาให้ระบุใน sources_note ว่าต้องเช็กอะไร";
   const TT_SCHEMA = `{"title":"","audience":"","format":"","length_sec":60,"hooks":["hook หลัก","สำรอง1","สำรอง2"],"hook_onscreen":"ข้อความบนจอ 0-3 วิ","scenes":[{"visual":"ภาพ/ท่าทาง","line":"บทพูด","onscreen":"ข้อความบนจอ"}],"punchline":"","cta":"","caption":"ไม่เกิน 150 ตัวอักษร","hashtags":["#..."],"music":"","disclaimer":"","sources_note":"สิ่งที่ต้องเช็กข้อเท็จจริง","log":{"topic":"","angle":"","hook":""}}`;
-  const SP_SCHEMA = (suggested) => `{"product":"ชื่อสินค้า","suggested":${suggested},"search_keywords":["..."],"price_range":"","shop_criteria":"","pain_point":"","formula":"","versions":{"A":"","B":"","C":""},"first_comment":"ข้อความคอมเมนต์แรกที่มีลิงก์","image_idea":"","group_types":["ประเภทกลุ่ม FB ที่เหมาะ"],"group_search":["คีย์เวิร์ดค้นหากลุ่ม"],"log":{"product":"","pain":""}}`;
+  const SP_SCHEMA = (suggested) => `{"product":"ชื่อสินค้า","suggested":${suggested},"search_keywords":["..."],"price_range":"","shop_criteria":"","pain_point":"","formula":"","versions":{"A":"","B":"","C":""},"first_comment":"ข้อความคอมเมนต์แรกที่มีลิงก์","image_idea":"","image_text":{"headline":"หัวข้อใหญ่บนรูป 3-7 คำ ประโยคสั้นที่อ่านแล้วอยากหยุดดู","sub":"บรรทัดรอง 6-14 คำ","badges":["จุดเด่นสั้น 2-4 คำ จากข้อมูลจริงเท่านั้น","","",""],"cta":"สั่งเลย"},"scene_en":"English, one sentence: what the product is and what it looks like (from the photo if given), for an image generator","pain_scene_en":"English, one sentence: the everyday problem scene before using the product","group_types":["ประเภทกลุ่ม FB ที่เหมาะ"],"group_search":["คีย์เวิร์ดค้นหากลุ่ม"],"log":{"product":"","pain":""}}`;
   const TT_REFINE = ["ตลกขึ้น", "สั้นลงเหลือ 45 วิ", "Hook แรงขึ้น", "เปลี่ยนมุมเล่าใหม่", "ภาษาวัยรุ่นขึ้น"];
+  const THAI_STYLE = `มาตรฐานภาษาไทย (สำคัญมาก):
+- ทุกบรรทัดต้องเป็นประโยคภาษาไทยที่สมบูรณ์ อ่านออกเสียงแล้วลื่น เหมือนคนไทยพิมพ์โพสต์เอง ไม่ใช่ภาษาแปลจากอังกฤษ
+- ห้ามคำผสมแปลก ๆ ห้ามประโยคขาดประธาน/กริยาจนอ่านไม่รู้เรื่อง ห้ามสะกดผิด ห้ามใช้คำต่างประเทศที่คนไทยไม่ใช้
+- ผู้โพสต์เป็นผู้ชาย ลงท้ายสุภาพด้วย "ครับ" เท่าที่จำเป็น ไม่ปน "ค่ะ"
+- ประโยคละไม่เกิน 20-25 คำ ขึ้นบรรทัดใหม่เมื่อเปลี่ยนประเด็น อีโมจิไม่เกิน 1 ต่อบรรทัด
+- ใช้คำที่คนไทยพูดจริง เช่น "เคยไหม", "บอกเลยว่า", "ตัวช่วยเล็ก ๆ", "ใครกำลังหาอยู่" ไม่ใช้คำโฆษณาเกินจริง เช่น "ดีที่สุดในโลก"
+- ห้ามบอกว่าตัวเองใช้แล้ว ห้ามแต่งรีวิวหรือคำพูดลูกค้า ใช้ข้อมูลจากหน้าสินค้า/รูปเท่านั้น
+- ก่อนตอบ ให้อ่านทวนทุกเวอร์ชันทีละบรรทัด แก้ทุกประโยคที่ไม่เป็นธรรมชาติ
+ตัวอย่างระดับภาษาที่ต้องการ (ห้ามลอก ใช้เป็นแนวน้ำเสียงเท่านั้น):
+[สั้น] เคยไหม สายชาร์จพันกันจนต้องนั่งแกะทุกเช้า 😩
+ลองตัวจัดเก็บสายแบบแม่เหล็กดูครับ ดึงออกมาใช้ง่าย เก็บกลับก็เป็นระเบียบ
+พิกัดอยู่ในคอมเมนต์แรกครับ #ลิงก์แนะนำ (ได้ค่าคอมเล็กน้อย)
+[เล่าเรื่อง] ทุกครั้งที่จะออกจากบ้าน ต้องเสียเวลาหาว่าสายชาร์จเส้นไหนเป็นของอะไร
+ยิ่งรีบยิ่งพันกัน สุดท้ายดึงแรงจนหัวสายหลวมไปอีกเส้น
+ตัวจัดเก็บสายแบบแม่เหล็กช่วยให้แต่ละเส้นมีที่ของมัน หยิบใช้ได้ทันที ไม่ต้องแกะ
+ใครโต๊ะทำงานรกด้วยสายเหมือนกัน ลองดูพิกัดในคอมเมนต์แรกได้เลยครับ
+#ลิงก์แนะนำ (ได้ค่าคอมเล็กน้อย)`;
   const SP_REFINE = ["สั้นลง", "ขายแรงขึ้น", "เป็นกันเองขึ้น", "Pain Point มุมใหม่", "อีโมจิน้อยลง"];
 
   // ---------------- state ----------------
@@ -359,7 +376,7 @@
     box.className = "out";
     box.innerHTML = `<div class="gen"><div class="gen-top"><span>${esc(label)}</span><span class="num" data-n>0 ตัวอักษร</span></div><div class="gen-bar"><i></i></div><p class="gen-tail" data-tail>กำลังคิด…</p></div>`;
     const nEl = box.querySelector("[data-n]"), tail = box.querySelector("[data-tail]");
-    const opts = Object.assign({ modelTier: "default", cache: false }, GH ? { json: true, search: !!o.search, tier: o.tier || "default", maxTokens: o.maxTokens } : {});
+    const opts = Object.assign({ modelTier: "default", cache: false }, !GH && o.images ? { images: o.images } : {}, GH ? { json: true, search: !!o.search, tier: o.tier || "default", maxTokens: o.maxTokens } : {});
     if (o.search && GH) tail.textContent = "กำลังค้นข้อมูลล่าสุดจากเว็บ…";
     const r = await sample(prompt, Object.assign(opts, { onText: (u) => {
       nEl.textContent = u.text.length.toLocaleString("th-TH") + " ตัวอักษร";
@@ -469,6 +486,7 @@ ${TT_SCHEMA}`;
             <label class="ctl" for="${s.id}-note"><span>จุดเด่น/โปรจากหน้าสินค้า (ไม่บังคับ)</span><input id="${s.id}-note" placeholder="เช่น ส่งฟรี มีโค้ดลด 20% คะแนน 4.9 ขายแล้ว 10k"></label>
             <button class="btn" id="${s.id}-gen">เขียนโพสต์</button>
           </div>
+          <div class="sp-photo"><label class="mini" for="${s.id}-photo">📷 ใส่รูปสินค้า</label><input type="file" id="${s.id}-photo" accept="image/*" hidden><span class="note" id="${s.id}-photo-note">ใส่รูปจากหน้าสินค้า แล้ว AI จะเขียนตรงขึ้น และใช้ทำรูปโพสต์</span><img id="${s.id}-thumb" alt="" hidden></div>
           <div class="out empty" id="${s.id}-out">ยังไม่มีโพสต์สำหรับช่วงนี้</div>
         </div>
       </article>`).join("");
@@ -476,6 +494,7 @@ ${TT_SCHEMA}`;
       $(`#${s.id}-gen`).addEventListener("click", () => genSlot(s));
       $(`#${s.id}-posted`).addEventListener("change", (e) => toggleUsed("SP", s.id, e.target.checked));
       ["cat", "name", "price", "link", "note"].forEach((k) => $(`#${s.id}-${k}`).addEventListener("change", () => { slotState(s.id).input = readSlot(s.id); saveDay(); }));
+      $(`#${s.id}-photo`).addEventListener("change", (e) => { const f = e.target.files && e.target.files[0]; if (f) setSlotPhoto(s.id, f); });
     });
   }
   const slotState = (id) => (day.slots[id] = day.slots[id] || { input: {}, output: null, posted: false });
@@ -498,6 +517,8 @@ ${TT_SCHEMA}`;
     const otherToday = SLOTS.filter((x) => x.id !== s.id).map((x) => (day.slots[x.id] && day.slots[x.id].output && day.slots[x.id].output.product) || "").filter(Boolean).join(", ") || "-";
     const formula = ["PAS (Problem–Agitate–Solution)", "AIDA", "Before–After–Bridge", "เปิดด้วย 'เคยไหม…'"][Math.floor(Math.random() * 4)];
     const extra = refine && st.output ? `นี่คือโพสต์เดิม ให้ปรับตามคำสั่ง "${refine}" โดยคงสินค้าเดิม แล้วตอบทั้งชุดใหม่:\n${JSON.stringify(st.output)}` : "";
+    const photo = !GH && sampleImages && slotPhotos[s.id] ? slotPhotos[s.id] : null;
+    const photoNote = photo ? "แนบรูปสินค้าจริงมาด้วย ใช้รูปเพื่อรู้ว่าสินค้าคืออะไร หน้าตา สี วัสดุ จุดเด่นที่เห็นได้จริง ห้ามเดาสเปกที่มองไม่เห็นในรูป" : "";
     const prompt = `คุณคือทีมเขียนโพสต์ขายของสาย Shopee Affiliate สำหรับโพสต์ลงกลุ่ม Facebook ภาษาไทย หลักการ: Pain Point First เปิดด้วยปัญหาที่คนเจอจริง ขยี้ให้รู้สึก เสนอสินค้าเป็นทางออก (ไม่เกิน 3 จุดเด่น) เหตุผลให้ซื้อตอนนี้เฉพาะที่เป็นจริง แล้ว CTA
 ${RULES}
 ช่วงเวลาโพสต์: ${s.time} (${s.who}) หมวด: ${i.cat}
@@ -506,12 +527,14 @@ ${(() => { const pd = planDay($("#tt-date").value), ps = pd && pd.sp && pd.sp[SL
 สินค้าที่ใช้ไปใน 14 วัน (ถ้าเป็นชิ้นเดิมต้องใช้ Pain Point คนละมุม หรือเสนอชิ้นใหม่):
 ${used}
 สูตรหลัก: ${formula}
+${THAI_STYLE}
+${photoNote}
 ทำ 3 เวอร์ชัน: A สั้นไม่เกิน 3 บรรทัด, B เล่าเรื่องตามสูตร, C ลิสต์จุดเด่น+อีโมจิ ทุกเวอร์ชันลงท้ายด้วยการเปิดเผย เช่น "#ลิงก์แนะนำ (ได้ค่าคอมเล็กน้อย)" และบอกว่าลิงก์อยู่ในคอมเมนต์ (ไม่ใส่ลิงก์ในตัวโพสต์)
 ${extra}
 ตอบเป็น JSON อย่างเดียว ไม่มีข้อความอื่น:
 ${SP_SCHEMA(!hasProduct)}`;
     try {
-      const r = await aiJSON(prompt, $(`#${s.id}-out`), refine ? `กำลังปรับ: ${refine}` : `ทีมปักตะกร้ากำลังเขียนโพสต์ ${s.time}`, { tier: "fast" });
+      const r = await aiJSON(prompt, $(`#${s.id}-out`), refine ? `กำลังปรับ: ${refine}` : `ทีมปักตะกร้ากำลังเขียนโพสต์ ${s.time}`, { tier: "fast", images: photo || undefined, maxTokens: 5000 });
       if (!r || !r.versions) throw { message: "รูปแบบคำตอบไม่ครบ" };
       if (i.link) r.first_comment = String(r.first_comment || "").replace(/\[ลิงก์\]/g, i.link);
       st.output = r; st.posted = false; $(`#${s.id}-posted`).checked = false;
@@ -537,11 +560,14 @@ ${SP_SCHEMA(!hasProduct)}`;
         ${copyBlock("เวอร์ชัน C · ลิสต์จุดเด่น", (r.versions && r.versions.C) || "")}
         ${copyBlock("คอมเมนต์แรก (ใส่ลิงก์)", r.first_comment || "")}
       </div>
+      <div class="row"><button class="btn" data-studio="${id}">🎨 ทำรูปโพสต์ (Gemini)</button>${GH ? "" : `<button class="mini" data-export="${id}">📤 ส่งไป HQ GitHub</button>`}</div>
       <dl class="kv"><dt>ไอเดียภาพ</dt><dd>${esc(r.image_idea)}</dd><dt>กลุ่มที่เหมาะ</dt><dd>${(r.group_types || []).map(esc).join(" · ")}<br><span class="note">ค้นกลุ่ม: ${(r.group_search || []).map(esc).join(", ")}</span></dd></dl>
       <p class="note">ก่อนโพสต์: เช็กกฎกลุ่ม · ลิงก์เปิดได้ · ราคาตรงหน้าสินค้า · ข้อความแต่ละกลุ่มไม่ซ้ำกันทั้งหมด · เว้นแต่ละกลุ่ม 10–15 นาที</p>
       <div class="refine"><span>ปรับด้วย AI</span>${SP_REFINE.map((t) => `<button class="chip-btn" data-spref="${esc(t)}">${esc(t)}</button>`).join("")}</div>`;
     const s = SLOTS.find((x) => x.id === id);
     out.querySelectorAll("[data-spref]").forEach((b) => b.addEventListener("click", () => genSlot(s, b.dataset.spref)));
+    const sb = out.querySelector("[data-studio]"); if (sb) sb.addEventListener("click", () => openStudio(id));
+    const xb = out.querySelector("[data-export]"); if (xb) xb.addEventListener("click", () => exportDay());
   }
 
   // ---------------- logs ----------------
@@ -1092,6 +1118,190 @@ ${$("#pl-note").value.trim() ? "เจ้าของอยากเน้น: "
     if (t.dataset.ldnote != null) saveMeta(list[+t.dataset.ldnote], { note: t.value.trim().slice(0, 200) });
   }));
 
+  // ---------------- product photos + image studio ----------------
+  const slotPhotos = {}; let sampleImages = null, downloadsApi = null;
+  function setSlotPhoto(id, f) {
+    slotPhotos[id] = f;
+    const im = $(`#${id}-thumb`); im.src = URL.createObjectURL(f); im.hidden = false;
+    $(`#${id}-photo-note`).textContent = GH ? "ใช้รูปนี้ทำรูปโพสต์ได้ (เขียนโพสต์จากรูปทำได้ใน HQ บน claude.ai)" : (sampleImages ? "AI จะดูรูปนี้ตอนเขียนโพสต์" : "ใช้รูปนี้ทำรูปโพสต์ได้");
+  }
+  const STYLES = [
+    { k: "poster", t: "โปสเตอร์โฆษณา", d: "หัวข้อใหญ่ ฉากดราม่า ป้ายจุดเด่น 4 ช่อง" },
+    { k: "flat", t: "สินค้าวางสวย ๆ", d: "วางบนโต๊ะ มีของตกแต่ง แสงนุ่ม" },
+    { k: "premium", t: "พรีเมียม / พรีออเดอร์", d: "บรรยากาศหรู ป้ายราคา" },
+    { k: "ba", t: "ใช้งานจริง ก่อน/หลัง", d: "ภาพปัญหาเทียบกับตอนใช้สินค้า" },
+  ];
+  function geminiPrompt(k, r, cat) {
+    const prod = (r && r.scene_en) || `the product in the attached photo (${(r && r.product) || "a product"})`;
+    const keep = "Use the attached photo as the exact product reference: keep its shape, colors, materials, logos and printed artwork exactly the same, do not redesign or redraw it.";
+    const noText = "Do not add any text, letters, numbers, captions, logos or watermarks anywhere in the image.";
+    const props = /ครัว|บ้าน/.test(cat) ? "kitchen and home" : /แม่|เด็ก|สัตว์/.test(cat) ? "family, baby or pet" : /แกดเจ็ต|ไอที/.test(cat) ? "desk and tech" : "lifestyle";
+    return {
+      poster: `${keep} Create a vertical 4:5 advertising poster photo of ${prod}. Dramatic cinematic background that matches the product's theme, strong rim lighting, rich contrast, the product large and sharp in the lower-middle. Keep the top third fairly dark and simple for a headline, and a clean strip at the bottom. ${noText}`,
+      flat: `${keep} Create a vertical 4:5 styled product photo of ${prod} placed on a warm wooden or beige table, top-down three-quarter angle, with a few small ${props} props around it, soft natural window light, gentle shadows, cozy and clean. Leave some empty space at the bottom. ${noText}`,
+      premium: `${keep} Create a vertical 4:5 luxury premium product shot of ${prod}: elegant moody setting with soft golden glow, shallow depth of field and subtle bokeh, the product centered as the hero. Leave calm space at the top and bottom. ${noText}`,
+      ba: `${keep} Create a vertical 4:5 image split into two halves side by side. Left half: ${(r && r.pain_scene_en) || "the everyday problem before using the product"}, slightly dull light. Right half: the same scene solved neatly by ${prod}, bright and tidy. Realistic Thai home setting, natural light. Leave a clean strip at the bottom. ${noText}`,
+    }[k];
+  }
+  let studio = { id: null, style: "poster", imgs: [], text: {} };
+  const FONT = '"Kanit","Prompt",sans-serif';
+  function ensureStudioDom() {
+    if ($("#studio")) return;
+    const d = document.createElement("div"); d.id = "studio"; d.className = "studio-ov"; d.hidden = true;
+    d.innerHTML = `<div class="studio">
+      <div class="studio-head"><h3>🎨 ทำรูปโพสต์</h3><button class="mini" id="st-close">ปิด</button></div>
+      <ol class="st-steps">
+        <li><b>รูปสินค้า</b><div class="row"><label class="mini" for="st-photo">📷 เลือกรูปสินค้า</label><input type="file" id="st-photo" accept="image/*" hidden><img id="st-thumb" alt="" hidden></div></li>
+        <li><b>เลือกแนวรูป แล้วส่งไป Gemini</b><div class="st-styles" id="st-styles"></div>
+          <div class="st-prompt"><div class="row"><button class="btn" id="st-share">ส่งรูป + คำสั่งไปแอป Gemini</button><button class="mini" id="st-copy">คัดลอกคำสั่ง</button><a class="mini" href="https://gemini.google.com/app" target="_blank" rel="noopener" style="text-decoration:none">เปิด Gemini</a></div>
+          <p class="note">ในแอป Gemini: แนบรูปสินค้า วางคำสั่ง แล้วกดส่ง ได้รูปแล้วกดค้างเพื่อบันทึก</p><details><summary class="note">ดูคำสั่ง</summary><p class="st-ptext" id="st-ptext"></p></details></div></li>
+        <li><b>ใส่รูปที่ได้จาก Gemini แล้วพิมพ์หัวข้อทับ</b><div class="row"><label class="mini" for="st-gen">🖼️ เลือกรูปจาก Gemini (เลือกได้ถึง 4 รูป)</label><input type="file" id="st-gen" accept="image/*" multiple hidden></div>
+          <div class="st-edit">
+            <label class="ctl"><span>หัวข้อใหญ่</span><input id="st-h"></label>
+            <label class="ctl"><span>บรรทัดรอง</span><input id="st-s"></label>
+            <label class="ctl"><span>ป้ายจุดเด่น (คั่นด้วย ,)</span><input id="st-b"></label>
+            <div class="ctl-row"><label class="ctl"><span>ราคา (ไม่บังคับ)</span><input id="st-p" inputmode="decimal"></label><label class="ctl"><span>ปุ่ม</span><input id="st-c"></label></div>
+          </div>
+          <canvas id="st-canvas" width="1080" height="1350"></canvas>
+          <div class="row"><button class="btn" id="st-save">⬇️ บันทึกรูป</button><button class="mini" id="st-shareimg" hidden>แชร์รูป</button></div></li>
+      </ol>
+      <p class="note">ตัวหนังสือบนรูปพิมพ์โดยระบบ แก้คำได้ทันทีโดยไม่ต้องเจนรูปใหม่ · ใช้รูปสินค้าจริงจากร้านเป็นต้นแบบ ไม่ให้ AI วาดโลโก้หรือคาแรกเตอร์ขึ้นใหม่</p>
+    </div>`;
+    document.body.appendChild(d);
+    $("#st-close").addEventListener("click", () => (d.hidden = true));
+    $("#st-photo").addEventListener("change", (e) => { const f = e.target.files[0]; if (f) { setSlotPhoto(studio.id, f); studioPhoto(); } });
+    $("#st-styles").addEventListener("click", (e) => { const b = e.target.closest("[data-st]"); if (!b) return; studio.style = b.dataset.st; renderStudio(); });
+    $("#st-copy").addEventListener("click", () => copy(curPrompt(), "คัดลอกคำสั่งแล้ว"));
+    $("#st-share").addEventListener("click", shareToGemini);
+    $("#st-gen").addEventListener("change", async (e) => {
+      studio.imgs = await Promise.all([...e.target.files].slice(0, 4).map(loadImg)); drawStudio();
+    });
+    ["h", "s", "b", "p", "c"].forEach((k) => $(`#st-${k}`).addEventListener("input", drawStudio));
+    $("#st-save").addEventListener("click", saveStudio);
+    $("#st-shareimg").addEventListener("click", shareImage);
+  }
+  const loadImg = (f) => new Promise((ok, no) => { const i = new Image(); i.onload = () => ok(i); i.onerror = no; i.src = URL.createObjectURL(f); });
+  function studioPhoto() { const f = slotPhotos[studio.id], im = $("#st-thumb"); if (f) { im.src = URL.createObjectURL(f); im.hidden = false; } else im.hidden = true; }
+  const curOut = () => (slotState(studio.id).output || {});
+  const curPrompt = () => geminiPrompt(studio.style, curOut(), (slotState(studio.id).input || {}).cat || "");
+  function openStudio(id) {
+    ensureStudioDom(); studio.id = id; studio.imgs = [];
+    const r = curOut(), it = r.image_text || {}, inp = slotState(id).input || {};
+    $("#st-h").value = it.headline || r.product || ""; $("#st-s").value = it.sub || "";
+    $("#st-b").value = (it.badges || []).filter(Boolean).slice(0, 4).join(", ");
+    $("#st-p").value = inp.price || ""; $("#st-c").value = it.cta || "สั่งเลย";
+    studioPhoto(); renderStudio(); $("#studio").hidden = false;
+    document.fonts && document.fonts.load(`800 40px Kanit`).then(drawStudio, drawStudio);
+  }
+  function renderStudio() {
+    $("#st-styles").innerHTML = STYLES.map((s) => `<button type="button" data-st="${s.k}" aria-pressed="${s.k === studio.style}"><b>${s.t}</b><span>${s.d}</span></button>`).join("");
+    $("#st-ptext").textContent = curPrompt(); drawStudio();
+  }
+  async function shareToGemini() {
+    const text = curPrompt(), f = slotPhotos[studio.id];
+    try {
+      if (f && navigator.canShare && navigator.canShare({ files: [f] })) { await navigator.share({ files: [f], text }); return; }
+      if (navigator.share && !f) { await navigator.share({ text }); return; }
+    } catch (e) { if (e && e.name === "AbortError") return; }
+    copy(text, "คัดลอกคำสั่งแล้ว เปิด Gemini แล้วแนบรูปสินค้าเอง"); window.open("https://gemini.google.com/app", "_blank", "noopener");
+  }
+  // ---- canvas composer ----
+  function cover(ctx, img, x, y, w, h) {
+    const r = Math.max(w / img.width, h / img.height), iw = img.width * r, ih = img.height * r;
+    ctx.save(); ctx.beginPath(); ctx.rect(x, y, w, h); ctx.clip(); ctx.drawImage(img, x + (w - iw) / 2, y + (h - ih) / 2, iw, ih); ctx.restore();
+  }
+  const seg = window.Intl && Intl.Segmenter ? new Intl.Segmenter("th", { granularity: "word" }) : null;
+  function wrap(ctx, text, maxW, maxLines) {
+    const words = seg ? [...seg.segment(String(text || ""))].map((x) => x.segment) : String(text || "").split(/(\s+)/);
+    const lines = []; let cur = "";
+    for (const w of words) { const t = cur + w; if (ctx.measureText(t).width > maxW && cur.trim()) { lines.push(cur.trim()); cur = w.trimStart(); } else cur = t; }
+    if (cur.trim()) lines.push(cur.trim());
+    if (lines.length > maxLines) { lines.length = maxLines; lines[maxLines - 1] += "…"; }
+    return lines;
+  }
+  function rr(ctx, x, y, w, h, r) { ctx.beginPath(); ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r); ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath(); }
+  function fitText(ctx, text, maxW, size, weight, maxLines) { let s = size, L; do { ctx.font = `${weight} ${s}px ${FONT}`; L = wrap(ctx, text, maxW, 9); s -= 4; } while (L.length > maxLines && s > 30); return { lines: wrap(ctx, text, maxW, maxLines), size: s + 4 }; }
+  function drawStudio() {
+    const cv = $("#st-canvas"); if (!cv) return; const ctx = cv.getContext("2d"), W = 1080, H = 1350;
+    const T = { h: $("#st-h").value.trim(), s: $("#st-s").value.trim(), b: $("#st-b").value.split(/[,，]/).map((x) => x.trim()).filter(Boolean).slice(0, 4), p: $("#st-p").value.trim(), c: $("#st-c").value.trim() || "สั่งเลย" };
+    ctx.clearRect(0, 0, W, H); ctx.fillStyle = "#14182e"; ctx.fillRect(0, 0, W, H);
+    const imgs = studio.imgs, st = studio.style;
+    if (!imgs.length) { ctx.fillStyle = "#9ba5c6"; ctx.font = `500 40px ${FONT}`; ctx.textAlign = "center"; ctx.fillText("เลือกรูปจาก Gemini เพื่อดูตัวอย่าง", W / 2, H / 2); }
+    else if (imgs.length === 1 || st !== "flat") cover(ctx, imgs[0], 0, 0, W, H);
+    else { const g = 8, cw = (W - g) / 2, ch = (H - g) / 2; imgs.slice(0, 4).forEach((im, i) => cover(ctx, im, (i % 2) * (cw + g), Math.floor(i / 2) * (ch + g), cw, i >= 2 || imgs.length > 2 ? ch : H)); }
+    ctx.textAlign = "center"; ctx.textBaseline = "top"; ctx.lineJoin = "round";
+    const price = T.p ? `฿${Number(T.p.replace(/[^\d.]/g, "")).toLocaleString("th-TH")}` : "";
+    if (st === "poster") {
+      let g = ctx.createLinearGradient(0, 0, 0, H * 0.45); g.addColorStop(0, "rgba(0,0,0,.82)"); g.addColorStop(1, "rgba(0,0,0,0)"); ctx.fillStyle = g; ctx.fillRect(0, 0, W, H * 0.45);
+      g = ctx.createLinearGradient(0, H * 0.7, 0, H); g.addColorStop(0, "rgba(0,0,0,0)"); g.addColorStop(1, "rgba(0,0,0,.85)"); ctx.fillStyle = g; ctx.fillRect(0, H * 0.7, W, H * 0.3);
+      const hd = fitText(ctx, T.h, 960, 112, 800, 2); let y = 70;
+      hd.lines.forEach((l) => { ctx.font = `800 ${hd.size}px ${FONT}`; const gg = ctx.createLinearGradient(0, y, 0, y + hd.size); gg.addColorStop(0, "#fff6d6"); gg.addColorStop(.55, "#ffd36b"); gg.addColorStop(1, "#e89a1c"); ctx.lineWidth = 12; ctx.strokeStyle = "rgba(20,10,0,.85)"; ctx.strokeText(l, W / 2, y); ctx.fillStyle = gg; ctx.fillText(l, W / 2, y); y += hd.size * 1.12; });
+      if (T.s) { ctx.font = `600 44px ${FONT}`; wrap(ctx, T.s, 940, 2).forEach((l) => { ctx.lineWidth = 8; ctx.strokeStyle = "rgba(0,0,0,.7)"; ctx.strokeText(l, W / 2, y + 8); ctx.fillStyle = "#fff"; ctx.fillText(l, W / 2, y + 8); y += 56; }); }
+      if (T.b.length) { const n = T.b.length, bw = (W - 80 - (n - 1) * 14) / n; T.b.forEach((t, i) => { const x = 40 + i * (bw + 14), yy = H - 260; rr(ctx, x, yy, bw, 92, 18); ctx.fillStyle = "rgba(10,12,24,.78)"; ctx.fill(); ctx.strokeStyle = "rgba(255,211,107,.8)"; ctx.lineWidth = 3; ctx.stroke(); ctx.fillStyle = "#fff"; const f = fitText(ctx, t, bw - 24, 32, 600, 2); ctx.font = `600 ${f.size}px ${FONT}`; f.lines.forEach((l, k) => ctx.fillText(l, x + bw / 2, yy + 46 - (f.lines.length * f.size * 1.1) / 2 + k * f.size * 1.1)); }); }
+      ctx.save(); ctx.translate(W - 230, H - 78); ctx.rotate(-0.04); rr(ctx, -190, -40, 380, 80, 14); ctx.fillStyle = "#e3262f"; ctx.fill(); ctx.fillStyle = "#fff"; ctx.font = `800 46px ${FONT}`; ctx.textBaseline = "middle"; ctx.fillText(`🛒 ${T.c}${price ? " " + price : ""}`, 0, 2); ctx.restore();
+    } else if (st === "flat") {
+      const cy = H - 260; rr(ctx, 40, cy, W - 80, 220, 28); ctx.fillStyle = "rgba(255,252,246,.94)"; ctx.fill();
+      ctx.textAlign = "left"; const hd = fitText(ctx, T.h, price ? 690 : 930, 66, 700, 2); ctx.fillStyle = "#3a2a22"; ctx.font = `700 ${hd.size}px ${FONT}`; let y = cy + 30; hd.lines.forEach((l) => { ctx.fillText(l, 76, y); y += hd.size * 1.1; });
+      if (T.s && hd.lines.length < 2) { ctx.font = `500 34px ${FONT}`; ctx.fillStyle = "#7a6458"; ctx.fillText(wrap(ctx, T.s, 690, 1)[0] || "", 76, y + 6); }
+      if (price) { rr(ctx, W - 300, cy + 60, 220, 100, 50); ctx.fillStyle = "#ff6b8a"; ctx.fill(); ctx.fillStyle = "#fff"; ctx.textAlign = "center"; ctx.font = `800 52px ${FONT}`; ctx.textBaseline = "middle"; ctx.fillText(price, W - 190, cy + 112); }
+    } else if (st === "premium") {
+      const v = ctx.createRadialGradient(W / 2, H / 2, H * 0.25, W / 2, H / 2, H * 0.75); v.addColorStop(0, "rgba(0,0,0,0)"); v.addColorStop(1, "rgba(0,0,0,.6)"); ctx.fillStyle = v; ctx.fillRect(0, 0, W, H);
+      const hd = fitText(ctx, T.h, 900, 88, 600, 2); let y = 80; ctx.fillStyle = "#fff8e8"; ctx.shadowColor = "rgba(0,0,0,.6)"; ctx.shadowBlur = 18;
+      hd.lines.forEach((l) => { ctx.font = `600 ${hd.size}px ${FONT}`; ctx.fillText(l, W / 2, y); y += hd.size * 1.15; });
+      if (T.s) { ctx.font = `400 38px ${FONT}`; ctx.fillStyle = "#f3e2bd"; wrap(ctx, T.s, 860, 2).forEach((l) => { ctx.fillText(l, W / 2, y + 6); y += 50; }); }
+      ctx.shadowBlur = 0;
+      const by = H - 190; rr(ctx, W / 2 - 300, by, 600, 120, 60); ctx.fillStyle = "rgba(20,16,30,.72)"; ctx.fill(); ctx.strokeStyle = "#e7c27a"; ctx.lineWidth = 3; ctx.stroke();
+      ctx.fillStyle = "#ffe7b0"; ctx.font = `700 50px ${FONT}`; ctx.textBaseline = "middle"; ctx.fillText(price ? `${T.c} · ${price}` : T.c, W / 2, by + 62);
+    } else {
+      ctx.textBaseline = "middle";
+      [["ก่อน", 40, "#6b7280"], ["หลัง", W / 2 + 40, "#16a34a"]].forEach(([t, x, c]) => { rr(ctx, x, 40, 170, 76, 38); ctx.fillStyle = c; ctx.fill(); ctx.fillStyle = "#fff"; ctx.font = `800 44px ${FONT}`; ctx.fillText(t, x + 85, 80); });
+      const by = H - 230; ctx.fillStyle = "rgba(12,14,28,.86)"; ctx.fillRect(0, by, W, 230);
+      const hd = fitText(ctx, T.h, 960, 70, 800, 2); ctx.fillStyle = "#fff"; let y = by + 115 - (hd.lines.length * hd.size * 1.1) / 2 + hd.size * 0.55;
+      hd.lines.forEach((l) => { ctx.font = `800 ${hd.size}px ${FONT}`; ctx.fillText(l, W / 2, y); y += hd.size * 1.1; });
+    }
+    ctx.textAlign = "left"; ctx.textBaseline = "alphabetic"; ctx.shadowBlur = 0;
+    $("#st-shareimg").hidden = !(GH && navigator.canShare);
+  }
+  const studioBlob = () => new Promise((ok) => $("#st-canvas").toBlob(ok, "image/png"));
+  const studioName = () => `post-${studio.style}-${$("#tt-date").value}-${studio.id}.png`;
+  async function saveStudio() {
+    if (!studio.imgs.length) { toast("เลือกรูปจาก Gemini ก่อน"); return; }
+    const blob = await studioBlob();
+    if (!GH && downloadsApi) { try { await downloadsApi.save({ filename: studioName(), data: blob }); } catch (e) { if (e && e.code !== "declined") toast("บันทึกไม่สำเร็จ"); } return; }
+    const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = studioName(); document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+    toast("บันทึกรูปแล้ว");
+  }
+  async function shareImage() {
+    if (!studio.imgs.length) return; const f = new File([await studioBlob()], studioName(), { type: "image/png" });
+    try { if (navigator.canShare && navigator.canShare({ files: [f] })) await navigator.share({ files: [f] }); } catch (e) {}
+  }
+
+  // ---------------- ส่งงานข้ามระหว่าง claude.ai ↔ GitHub ----------------
+  function exportDay() {
+    const pack = { v: 1, date: $("#tt-date").value, tiktok: day.tiktok || null, slots: {} };
+    SLOTS.forEach((s) => { const st = day.slots[s.id]; if (st && st.output) pack.slots[s.id] = { input: st.input || {}, output: st.output }; });
+    copy("HQX1:" + JSON.stringify(pack), "คัดลอกงานแล้ว ไปที่ HQ GitHub กด 📥 วางงานจาก claude.ai");
+  }
+  async function importDay(text) {
+    const m = String(text || "").trim().match(/^HQX1:(.*)$/s); if (!m) { toast("ข้อความไม่ถูกต้อง ให้กด 📤 ใน claude.ai ก่อน"); return; }
+    let pack; try { pack = JSON.parse(m[1]); } catch (e) { toast("ข้อความไม่ครบ ลองคัดลอกใหม่"); return; }
+    if (pack.date && pack.date !== $("#tt-date").value) { $("#tt-date").value = pack.date; syncPillar(); await loadDay(); }
+    if (pack.tiktok && !day.tiktok) day.tiktok = pack.tiktok;
+    Object.entries(pack.slots || {}).forEach(([id, v]) => { const st = slotState(id); st.input = Object.assign({}, st.input, v.input); st.output = v.output; });
+    renderTikTok(); SLOTS.forEach((s) => fillSlot(s.id)); saveDay(); toast("นำเข้างานจาก claude.ai แล้ว");
+  }
+  if (GH) {
+    const head = $("#p-today .panel-head");
+    const box = document.createElement("div"); box.className = "imp";
+    box.innerHTML = `<button class="btn-ghost" id="imp-btn">📥 วางงานจาก claude.ai</button><div id="imp-box" hidden><textarea id="imp-text" rows="3" placeholder="วางข้อความที่คัดลอกจากปุ่ม 📤 ใน HQ บน claude.ai"></textarea><button class="btn" id="imp-go">นำเข้า</button></div>`;
+    head.appendChild(box);
+    $("#imp-btn").addEventListener("click", async () => {
+      try { const t = await navigator.clipboard.readText(); if (/^HQX1:/.test(t.trim())) { importDay(t); return; } } catch (e) {}
+      $("#imp-box").hidden = !$("#imp-box").hidden; $("#imp-text").focus();
+    });
+    $("#imp-go").addEventListener("click", () => { importDay($("#imp-text").value); $("#imp-text").value = ""; $("#imp-box").hidden = true; });
+  }
+
   // ---------------- boot ----------------
   fillPillars();
   $("#tt-date").value = bkkDate();
@@ -1113,6 +1323,8 @@ ${$("#pl-note").value.trim() ? "เจ้าของอยากเน้น: "
     if (!window.claude || !window.claude.use) { banner("เปิดหน้านี้ใน claude.ai เพื่อใช้ AI และบันทึกข้อมูล (FHC ใช้คำนวณได้เลย)"); disableAI(); return; }
     const [s, d, u] = await Promise.all([claude.use("sample"), claude.use("db"), claude.use("user")]);
     sample = s; db = d;
+    if (s && !GH && s.limits) { try { const caps = await s.limits(); sampleImages = caps && caps.images ? caps.images : null; } catch (e) {} }
+    if (!GH) { try { downloadsApi = await claude.use("downloads"); } catch (e) {} }
     if (!sample) disableAI();
     if (u) { try { uid = await u.id(); } catch (e) {} }
     if (!db || !uid) { banner("ยังเชื่อมฐานข้อมูลไม่ได้ ระบบจะไม่จำงานและคลัง ลองเข้าสู่ระบบ claude.ai แล้วเปิดใหม่"); return; }
