@@ -682,7 +682,12 @@ select option { background: var(--bg1); color: var(--fg); }
     let res;
     try { res = await fetch(API, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(Object.assign({ action, pin }, body || {})) }); }
     catch (e) { throw { message: "เชื่อมต่อเซิร์ฟเวอร์ไม่ได้ ตรวจอินเทอร์เน็ตแล้วลองใหม่", code: "network" }; }
-    let j; try { j = await res.json(); } catch (e) { throw { message: "เซิร์ฟเวอร์ตอบกลับผิดรูปแบบ", code: "bad_response" }; }
+    let j; try { j = await res.json(); } catch (e) {
+      // Google บางครั้งตอบเป็นหน้าเว็บชั่วคราว (หลัง deploy / คนใช้พร้อมกัน) → ลองใหม่อัตโนมัติ
+      const tries = (body && body._try) || 0;
+      if (tries < 3 && !["add", "ai", "lead"].includes(action)) { await new Promise((r) => setTimeout(r, 1200 * (tries + 1))); return call(action, Object.assign({}, body, { _try: tries + 1 })); }
+      throw { message: "เซิร์ฟเวอร์ไม่ตอบ ลองรีเฟรชหน้าอีกครั้ง", code: "bad_response" };
+    }
     if (!j.ok) {
       if (j.error === "bad_pin") { lock(); throw { message: "รหัสไม่ถูกต้อง", code: "bad_pin" }; }
       throw { message: j.error || "เกิดข้อผิดพลาด", code: j.error || "error" };
